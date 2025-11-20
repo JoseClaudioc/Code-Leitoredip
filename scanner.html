@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Leitor de Ingressos ESIP</title>
+
+  <!-- Biblioteca que funciona no celular e HTTPS -->
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 20px;
+      background: #f2f6ff;
+    }
+    h2 {
+      color: #005bbb;
+    }
+    #reader {
+      width: 320px;
+      margin: auto;
+      border: 3px solid #005bbb;
+      border-radius: 12px;
+      padding: 10px;
+      background: white;
+    }
+    #result {
+      margin-top: 20px;
+      font-size: 20px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+<h2>📷 Leitor de Ingressos ESIP</h2>
+<p>Aponte a câmera para o QR Code do ingresso.</p>
+
+<div id="reader"></div>
+<div id="result"></div>
+
+<script>
+function marcarUsado(id) {
+  let ingressos = JSON.parse(localStorage.getItem("ingressosESIP") || "[]");
+  
+  const index = ingressos.findIndex(i => i.id == id);
+
+  if (index === -1) {
+    document.getElementById("result").innerHTML = "❌ Ingresso não encontrado!";
+    return;
+  }
+
+  if (ingressos[index].usado) {
+    document.getElementById("result").innerHTML = "⛔ Ingresso já foi utilizado!";
+    return;
+  }
+
+  ingressos[index].usado = true;
+  localStorage.setItem("ingressosESIP", JSON.stringify(ingressos));
+
+  document.getElementById("result").innerHTML = "✅ Ingresso validado com sucesso!";
+}
+
+function startScanner() {
+  const html5QrCode = new Html5Qrcode("reader");
+
+  html5QrCode.start(
+    { facingMode: "environment" }, // Traseira do celular
+    { fps: 10, qrbox: 250 },
+    (decodedText) => {
+      marcarUsado(decodedText);
+    },
+    (errorMessage) => {
+      // Erros ignorados para não travar
+    }
+  ).catch(err => {
+    document.getElementById("result").innerHTML =
+      "❌ Erro ao acessar câmera. Permita o uso da câmera.";
+  });
+}
+
+startScanner();
+</script>
+
+</body>
+</html>
