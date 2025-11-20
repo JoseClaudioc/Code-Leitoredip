@@ -1,160 +1,176 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-br">
 <head>
-  <meta charset="UTF-8">
-  <title>Leitor de Ingressos ESIP</title>
-  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Leitor ESIP Premium</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+<style>
+  body {
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    background: #0a0d14;
+    color: white;
+  }
 
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      padding: 20px;
-      background: #eef3ff;
-    }
+  header {
+    background: #003f88;
+    padding: 20px;
+    text-align: center;
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: 1px;
+  }
 
-    h1 {
-      color: #003f88;
-      font-size: 26px;
-      margin-bottom: 20px;
-    }
+  .container {
+    max-width: 600px;
+    margin: auto;
+    padding: 20px;
+  }
 
-    /* Tela de login */
-    #loginBox {
-      background: white;
-      padding: 20px;
-      width: 300px;
-      margin: 60px auto;
-      border-radius: 12px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.15);
-    }
+  /* Login */
+  #loginCard {
+    background: #111623;
+    padding: 25px;
+    border-radius: 18px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    margin-top: 40px;
+  }
 
-    #loginBox input {
-      padding: 12px;
-      width: 90%;
-      font-size: 18px;
-      margin-top: 10px;
-      border: 2px solid #003f88;
-      border-radius: 8px;
-    }
+  #loginCard h2 {
+    margin: 0 0 10px;
+    font-size: 24px;
+  }
 
-    #loginBox button {
-      padding: 12px;
-      margin-top: 15px;
-      width: 100%;
-      background: #003f88;
-      color: white;
-      font-size: 18px;
-      border: none;
-      border-radius: 8px;
-    }
+  input {
+    width: 100%;
+    padding: 14px;
+    border-radius: 10px;
+    border: none;
+    margin-top: 12px;
+    font-size: 18px;
+    background: #1a2030;
+    color: white;
+  }
 
-    /* Caixa do leitor */
-    #reader {
-      width: 320px;
-      margin: auto;
-      display: none;
-      border: 3px solid #003f88;
-      border-radius: 12px;
-      padding: 10px;
-      background: white;
-    }
+  button {
+    margin-top: 18px;
+    width: 100%;
+    padding: 14px;
+    font-size: 18px;
+    border: none;
+    border-radius: 12px;
+    background: #0077ff;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.3s;
+  }
 
-    #result {
-      margin-top: 20px;
-      font-size: 22px;
-      font-weight: bold;
-      padding: 15px;
-      border-radius: 10px;
-    }
-  </style>
+  button:hover {
+    background: #2893ff;
+  }
+
+  /* Scanner area */
+  #scanSection {
+    display: none;
+    margin-top: 30px;
+  }
+
+  #reader {
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 0 20px rgba(0,0,0,0.6);
+  }
+
+  #result {
+    margin-top: 20px;
+    padding: 18px;
+    font-size: 22px;
+    font-weight: 600;
+    border-radius: 14px;
+    text-align: center;
+  }
+
+  footer {
+    margin-top: 50px;
+    text-align: center;
+    color: #6f7a90;
+    font-size: 14px;
+    padding-bottom: 30px;
+  }
+</style>
 </head>
 <body>
 
-<h1>📡 ESIP - Sistemas</h1>
+<header>📡 ESIP - Leitor Oficial Premium</header>
 
-<!-- LOGIN -->
-<div id="loginBox">
-  <h2>🔒 Acesso Restrito</h2>
-  <p>Digite o código para abrir o leitor:</p>
+<div class="container">
 
-  <input id="codigoInput" type="password" placeholder="Código de acesso">
+  <div id="loginCard">
+    <h2>🔒 Acesso Restrito</h2>
+    <p>Digite o código para continuar:</p>
+    <input id="accessCode" type="password" placeholder="Código de acesso" />
+    <button onclick="validateLogin()">Entrar</button>
+    <p id="loginError" style="display:none; color:#ff4e4e; margin-top:10px; font-weight:600;">Código incorreto!</p>
+  </div>
 
-  <button onclick="validarAcesso()">Entrar</button>
+  <div id="scanSection">
+    <h2>📷 Leitor ESIP</h2>
+    <p>Aponte a câmera para o QR Code.</p>
+    <div id="reader"></div>
+    <div id="result"></div>
+  </div>
 
-  <p style="color:red; font-weight:bold; display:none;" id="erroLogin">
-    Código incorreto!
-  </p>
 </div>
 
-<!-- LEITOR -->
-<h2 id="tituloLeitor" style="display:none;">📷 Leitor Oficial ESIP</h2>
-<p id="subLeitor" style="display:none;">Aponte a câmera para o QR Code.</p>
-
-<div id="reader"></div>
-<div id="result"></div>
-
-<!-- Sons -->
-<audio id="okSound">
-  <source src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg">
-</audio>
-
-<audio id="errorSound">
-  <source src="https://actions.google.com/sounds/v1/cartoon/boing.ogg">
-</audio>
+<footer>© 2025 ESIP - Sistemas Inteligentes</footer>
 
 <script>
+const correctCode = "ESIP2025";
 
-const codigoCorreto = "ESIP2025";
+function validateLogin() {
+  const typed = document.getElementById("accessCode").value;
 
-/* --- LOGIN --- */
-function validarAcesso() {
-  const digitado = document.getElementById("codigoInput").value;
-
-  if (digitado === codigoCorreto) {
-    document.getElementById("loginBox").style.display = "none";
-
-    document.getElementById("reader").style.display = "block";
-    document.getElementById("tituloLeitor").style.display = "block";
-    document.getElementById("subLeitor").style.display = "block";
-
+  if (typed === correctCode) {
+    document.getElementById("loginCard").style.display = "none";
+    document.getElementById("scanSection").style.display = "block";
     startScanner();
   } else {
-    document.getElementById("erroLogin").style.display = "block";
+    document.getElementById("loginError").style.display = "block";
   }
 }
 
-/* ---------- 2) Formato válido ---------- */
-function formatoValido(textoQR) {
-  return textoQR.startsWith("ESIP-");
+function formatValid(qr) {
+  return qr.startsWith("ESIP-");
 }
 
-/* ---------- 3) Scanner ---------- */
 function startScanner() {
-  const html5QrCode = new Html5Qrcode("reader");
+  const html5Qr = new Html5Qrcode("reader");
 
-  html5QrCode.start(
+  html5Qr.start(
     { facingMode: "environment" },
-    { fps: 10, qrbox: 250 },
+    { fps: 10, qrbox: 280 },
     (decodedText) => {
 
-      if (!formatoValido(decodedText)) {
-        document.getElementById("result").style.background = "#ffcccc";
-        document.getElementById("result").innerHTML = "❌ Formato inválido!";
-        document.getElementById("errorSound").play();
+      if (!formatValid(decodedText)) {
+        showResult(false, "❌ Código inválido!");
         return;
       }
 
-      document.getElementById("result").style.background = "#ccffcc";
-      document.getElementById("result").innerHTML = "✅ Ingresso ESIP válido!";
-      document.getElementById("okSound").play();
+      showResult(true, "✅ Ingresso ESIP válido!");
     }
-  ).catch(err => {
-    document.getElementById("result").innerHTML =
-      "❌ Erro ao acessar câmera. Permita o uso.";
+  ).catch(() => {
+    showResult(false, "❌ Erro ao acessar câmera. Permita o uso.");
   });
 }
 
+function showResult(success, msg) {
+  const box = document.getElementById("result");
+  box.style.background = success ? "#0fbd7f" : "#ff4e4e";
+  box.innerHTML = msg;
+}
 </script>
 
 </body>
