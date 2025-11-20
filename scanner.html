@@ -151,10 +151,13 @@
 const ACCESS_CODE = 'ESIP2025';
 const STORAGE_KEY = 'esip_scans_v1';
 const ACCEPT_PREFIX = 'ESIP-';
+const DEBOUNCE_MS = 1500; // tempo mínimo entre leituras (anti-spam)
 
 let html5Qr = null;
 let isRunning = false;
 let sessionStart = null;
+let lastScanTs = 0; // timestamp da última leitura (para debounce)
+
 
 // util
 function nowIso(){ return new Date().toISOString(); }
@@ -199,13 +202,14 @@ function validateLogin(){ const v = document.getElementById('accessCode').value.
 }
 function fillDemo(){ document.getElementById('accessCode').value = ACCESS_CODE; validateLogin(); }
 
-// scanner logic with duplicate prevention
+// scanner logic with duplicate prevention & debounce
 function isDuplicate(code){ const logs = loadLogs(); return logs.some(l=>l.code===code && l.status==='valid'); }
 function formatValid(code){ return typeof code==='string' && code.startsWith(ACCEPT_PREFIX); }
 
 async function startScanner(){
-  if(html5Qr) return;
-  html5Qr = new Html5Qrcode('reader');
+  // se já existe uma instância, tenta retomar em vez de criar nova
+  if(html5Qr && isRunning) return;
+  if(!html5Qr) html5Qr = new Html5Qrcode('reader');
   sessionStart = new Date(); document.getElementById('sessionTime').innerText = sessionStart.toLocaleString();
 
   const constraints = { fps:8, qrbox: {width:320, height:320} };
@@ -213,29 +217,75 @@ async function startScanner(){
     await html5Qr.start({ facingMode: 'environment' }, constraints, onDecode);
     isRunning = true;
     showResult(true, 'Scanner ativo — aponte a câmera para um QR');
-  }catch(e){ showResult(false, 'Erro ao acessar a câmera. Permita o uso e atualize a página.'); }
+  }catch(e){
+    console.error('startScanner error', e);
+    showResult(false, 'Erro ao acessar a câmera. Permita o uso e atualize a página.');
+  }
 }
 
-function onDecode(decodedText){
-  // normalize
-  const code = decodedText.trim();
+async function onDecode(decodedText){
+  // debounce global (para evitar bursts de leituras)
+  const now = Date.now();
+  if(now - lastScanTs < DEBOUNCE_MS){
+    // ignorar leituras muito próximas
+    return;
+  }
+  lastScanTs = now;
 
-  // duplicate
+  const code = String(decodedText).trim();
+
+  // duplicate detection (persistente)
   if(isDuplicate(code) && formatValid(code)){
     addLog(code,'dup');
     showResult(false, '⚠️ Já registrado (duplicado)');
+    // pausa curta para evitar spam de duplicados
+    await tryPauseThenAutoResume();
     return;
   }
 
   if(!formatValid(code)){
     addLog(code,'invalid');
     showResult(false, '❌ QR Inválido');
+    await tryPauseThenAutoResume();
     return;
   }
 
   // válido
   addLog(code,'valid');
   showResult(true, '✅ Ingresso ESIP válido');
+  await tryPauseThenAutoResume();
+}
+
+// função que pausa (se possível) e retoma automaticamente após debounce
+async function tryPauseThenAutoResume(){
+  try{
+    if(html5Qr && isRunning && typeof html5Qr.pause === 'function'){
+      await html5Qr.pause();
+      isRunning = false;
+    }
+  }catch(e){
+    console.warn('Erro ao pausar (ignorando):', e);
+  }
+
+  // retomar automaticamente após DEBOUNCE_MS, mas só se o scanner não tiver sido parado manualmente
+  setTimeout(async ()=>{
+    try{
+      if(html5Qr && !isRunning){
+        if(typeof html5Qr.resume === 'function'){
+          await html5Qr.resume();
+          isRunning = true;
+          showResult(true, 'Scanner ativo');
+        } else {
+          // fallback: reinicia a instância
+          await startScanner();
+        }
+      }
+    }catch(e){
+      console.warn('Erro ao retomar automaticamente (tentando reiniciar):', e);
+      // se resume falhar, tenta reiniciar
+      try{ await startScanner(); }catch(err){ console.error(err); }
+    }
+  }, DEBOUNCE_MS);
 }
 
 // atualiza resultado e adiciona botão FECHAR funcional
@@ -246,22 +296,18 @@ function showResult(ok, msg){
     : 'linear-gradient(90deg, rgba(255,78,78,0.12), rgba(255,78,78,0.06))';
 
   box.style.background = bg;
-  // incluímos o botão fechar com id para adicionar o handler
   box.innerHTML = `
     <button id="closeResult" class="result-close" title="Fechar">✕</button>
     <div style="font-size:18px; padding-right:26px">${msg}</div>
     <div class="muted">${new Date().toLocaleTimeString()}</div>
   `;
 
-  // garante que o botão exista antes de vincular
   const btn = document.getElementById('closeResult');
   if(btn){
     btn.onclick = async function(){
-      // fecha a mensagem e para o scanner
       try{
         await stopScanner(); // para e libera a câmera
       }catch(e){
-        // se stopScanner lançar algo, apenas limpamos
         console.warn(e);
       } finally {
         box.innerHTML = 'Aguardando leitura...';
@@ -278,12 +324,12 @@ async function stopScanner(){
     return;
   }
   try {
-    await html5Qr.stop();
+    if(typeof html5Qr.stop === 'function') await html5Qr.stop();
   } catch(e){
     console.warn('Erro ao parar html5Qr (ignorando):', e);
   }
   try {
-    html5Qr.clear();
+    if(typeof html5Qr.clear === 'function') html5Qr.clear();
   } catch(e){
     console.warn('Erro ao limpar html5Qr (ignorando):', e);
   }
@@ -298,8 +344,54 @@ async function stopScanner(){
   }
 }
 
-async function pauseScanner(){ if(html5Qr && isRunning){ try{ await html5Qr.pause(); isRunning=false; showResult(false,'Scanner pausado'); }catch(e){ console.warn(e); }}}
-async function resumeScanner(){ if(html5Qr && !isRunning){ try{ await html5Qr.resume(); isRunning=true; showResult(true,'Scanner ativo'); }catch(e){ console.warn(e); }}}
+// pausa sem destruir a instância
+async function pauseScanner(){
+  if(html5Qr && isRunning){
+    try{
+      if(typeof html5Qr.pause === 'function'){
+        await html5Qr.pause();
+        isRunning = false;
+        showResult(false,'Scanner pausado');
+      } else {
+        // se pause não existir, paramos a instância (fallback)
+        await stopScanner();
+        showResult(false,'Scanner pausado (reinicie para usar)');
+      }
+    }catch(e){
+      console.warn('pauseScanner error', e);
+    }
+  } else {
+    showResult(false,'Scanner já está pausado');
+  }
+}
+
+// retoma de forma robusta (se instância for null, recria)
+async function resumeScanner(){
+  try{
+    if(!html5Qr){
+      // instância foi destruída → reiniciar
+      await startScanner();
+      return;
+    }
+    if(html5Qr && !isRunning){
+      if(typeof html5Qr.resume === 'function'){
+        await html5Qr.resume();
+        isRunning = true;
+        showResult(true,'Scanner ativo');
+      } else {
+        // fallback para reiniciar
+        await stopScanner();
+        await startScanner();
+      }
+    } else {
+      showResult(true,'Scanner já ativo');
+    }
+  }catch(e){
+    console.warn('resumeScanner error:', e);
+    // tentativa final: reiniciar a instância
+    try{ await stopScanner(); await startScanner(); }catch(err){ console.error(err); showResult(false,'Erro ao retomar scanner'); }
+  }
+}
 
 // Export CSV
 function exportCsv(){ const logs = loadLogs(); if(!logs.length) return alert('Nenhum registro para exportar');
