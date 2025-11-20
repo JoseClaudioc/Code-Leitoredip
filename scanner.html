@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -30,7 +29,22 @@
 
   /* Reader */
   #reader{border-radius:12px;overflow:hidden;background:#000}
-  #result{margin-top:12px;padding:12px;border-radius:10px;font-weight:700;text-align:center}
+  #result{margin-top:12px;padding:12px;border-radius:10px;font-weight:700;text-align:center;position:relative}
+
+  /* botão fechar no resultado */
+  .result-close{
+    position: absolute;
+    right: 10px;
+    top: 8px;
+    border: none;
+    background: transparent;
+    color: #fff;
+    font-size: 18px;
+    cursor: pointer;
+    padding: 4px 6px;
+    border-radius: 6px;
+  }
+  .result-close:hover{ background: rgba(255,255,255,0.06); }
 
   /* Controls */
   .controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
@@ -151,8 +165,9 @@ function loadLogs(){
 }
 function saveLogs(arr){ localStorage.setItem(STORAGE_KEY, JSON.stringify(arr)); }
 
-function addLog(code,status){ const logs = loadLogs();
-  const entry = {id:logs.length+1, ts: nowIso(), code, status};
+function addLog(code,status){
+  const logs = loadLogs();
+  const entry = {id:(logs.length?logs[0].id+1:1), ts: nowIso(), code, status};
   logs.unshift(entry); // newest first
   saveLogs(logs);
   refreshUI();
@@ -197,6 +212,7 @@ async function startScanner(){
   try{
     await html5Qr.start({ facingMode: 'environment' }, constraints, onDecode);
     isRunning = true;
+    showResult(true, 'Scanner ativo — aponte a câmera para um QR');
   }catch(e){ showResult(false, 'Erro ao acessar a câmera. Permita o uso e atualize a página.'); }
 }
 
@@ -222,21 +238,74 @@ function onDecode(decodedText){
   showResult(true, '✅ Ingresso ESIP válido');
 }
 
-function showResult(ok,msg){ const box=document.getElementById('result');
-  box.style.background = ok ? 'linear-gradient(90deg, rgba(15,189,127,0.12), rgba(15,189,127,0.06))' : 'linear-gradient(90deg, rgba(255,78,78,0.12), rgba(255,78,78,0.06))';
-  box.innerHTML = `<div style="font-size:18px">${msg}</div><div class=\"muted\">${new Date().toLocaleTimeString()}</div>`;
+// atualiza resultado e adiciona botão FECHAR funcional
+function showResult(ok, msg){
+  const box = document.getElementById('result');
+  const bg = ok
+    ? 'linear-gradient(90deg, rgba(15,189,127,0.12), rgba(15,189,127,0.06))'
+    : 'linear-gradient(90deg, rgba(255,78,78,0.12), rgba(255,78,78,0.06))';
+
+  box.style.background = bg;
+  // incluímos o botão fechar com id para adicionar o handler
+  box.innerHTML = `
+    <button id="closeResult" class="result-close" title="Fechar">✕</button>
+    <div style="font-size:18px; padding-right:26px">${msg}</div>
+    <div class="muted">${new Date().toLocaleTimeString()}</div>
+  `;
+
+  // garante que o botão exista antes de vincular
+  const btn = document.getElementById('closeResult');
+  if(btn){
+    btn.onclick = async function(){
+      // fecha a mensagem e para o scanner
+      try{
+        await stopScanner(); // para e libera a câmera
+      }catch(e){
+        // se stopScanner lançar algo, apenas limpamos
+        console.warn(e);
+      } finally {
+        box.innerHTML = 'Aguardando leitura...';
+        box.style.background = 'transparent';
+      }
+    };
+  }
 }
 
-async function pauseScanner(){ if(html5Qr && isRunning){ await html5Qr.pause(); isRunning=false; showResult(false,'Scanner pausado'); }}
-async function resumeScanner(){ if(html5Qr && !isRunning){ await html5Qr.resume(); isRunning=true; showResult(true,'Scanner ativo'); }}
-async function stopScanner(){ if(html5Qr){ await html5Qr.stop(); html5Qr.clear(); html5Qr=null; isRunning=false; showResult(false,'Scanner parado'); }}
+// para o scanner e limpa os recursos de forma segura
+async function stopScanner(){
+  if(!html5Qr) {
+    isRunning = false;
+    return;
+  }
+  try {
+    await html5Qr.stop();
+  } catch(e){
+    console.warn('Erro ao parar html5Qr (ignorando):', e);
+  }
+  try {
+    html5Qr.clear();
+  } catch(e){
+    console.warn('Erro ao limpar html5Qr (ignorando):', e);
+  }
+  html5Qr = null;
+  isRunning = false;
+
+  // atualizar UI
+  const box = document.getElementById('result');
+  if(box){
+    box.innerHTML = 'Scanner parado';
+    box.style.background = 'transparent';
+  }
+}
+
+async function pauseScanner(){ if(html5Qr && isRunning){ try{ await html5Qr.pause(); isRunning=false; showResult(false,'Scanner pausado'); }catch(e){ console.warn(e); }}}
+async function resumeScanner(){ if(html5Qr && !isRunning){ try{ await html5Qr.resume(); isRunning=true; showResult(true,'Scanner ativo'); }catch(e){ console.warn(e); }}}
 
 // Export CSV
 function exportCsv(){ const logs = loadLogs(); if(!logs.length) return alert('Nenhum registro para exportar');
   const header = ['id','timestamp','code','status'];
-  const rows = logs.map(r=>[r.id, r.ts, `"${r.code.replace(/"/g,'""')}"`, r.status].join(','));
-  const csv = [header.join(','), ...rows].join('
-');
+  const rows = logs.map(r=>[r.id, r.ts, `\"${r.code.replace(/\"/g,'\"\"')}\"`, r.status].join(','));
+  const csv = [header.join(','), ...rows].join('\n');
   const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a'); a.href=url; a.download = `esip_scans_${new Date().toISOString()}.csv`; a.click(); URL.revokeObjectURL(url);
