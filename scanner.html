@@ -1,10 +1,8 @@
-
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8">
   <title>Leitor de Ingressos ESIP</title>
-
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
   <style>
@@ -14,11 +12,48 @@
       padding: 20px;
       background: #eef3ff;
     }
-    h2 { color: #003f88; }
 
+    h1 {
+      color: #003f88;
+      font-size: 26px;
+      margin-bottom: 20px;
+    }
+
+    /* Tela de login */
+    #loginBox {
+      background: white;
+      padding: 20px;
+      width: 300px;
+      margin: 60px auto;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.15);
+    }
+
+    #loginBox input {
+      padding: 12px;
+      width: 90%;
+      font-size: 18px;
+      margin-top: 10px;
+      border: 2px solid #003f88;
+      border-radius: 8px;
+    }
+
+    #loginBox button {
+      padding: 12px;
+      margin-top: 15px;
+      width: 100%;
+      background: #003f88;
+      color: white;
+      font-size: 18px;
+      border: none;
+      border-radius: 8px;
+    }
+
+    /* Caixa do leitor */
     #reader {
       width: 320px;
       margin: auto;
+      display: none;
       border: 3px solid #003f88;
       border-radius: 12px;
       padding: 10px;
@@ -36,8 +71,25 @@
 </head>
 <body>
 
-<h2>📷 Leitor Oficial ESIP</h2>
-<p>Aponte a câmera para o QR Code do ingresso.</p>
+<h1>📡 ESIP - Sistemas</h1>
+
+<!-- LOGIN -->
+<div id="loginBox">
+  <h2>🔒 Acesso Restrito</h2>
+  <p>Digite o código para abrir o leitor:</p>
+
+  <input id="codigoInput" type="password" placeholder="Código de acesso">
+
+  <button onclick="validarAcesso()">Entrar</button>
+
+  <p style="color:red; font-weight:bold; display:none;" id="erroLogin">
+    Código incorreto!
+  </p>
+</div>
+
+<!-- LEITOR -->
+<h2 id="tituloLeitor" style="display:none;">📷 Leitor Oficial ESIP</h2>
+<p id="subLeitor" style="display:none;">Aponte a câmera para o QR Code.</p>
 
 <div id="reader"></div>
 <div id="result"></div>
@@ -53,69 +105,31 @@
 
 <script>
 
-// ---------- 1) Proteção com código secreto ----------
-const codigo = prompt("Digite o código de acesso para usar o leitor ESIP:");
+const codigoCorreto = "ESIP2025";
 
-if (codigo !== "ESIP2025") {
-  alert("Código incorreto. Acesso negado.");
-  window.location.href = "https://google.com";
+/* --- LOGIN --- */
+function validarAcesso() {
+  const digitado = document.getElementById("codigoInput").value;
+
+  if (digitado === codigoCorreto) {
+    document.getElementById("loginBox").style.display = "none";
+
+    document.getElementById("reader").style.display = "block";
+    document.getElementById("tituloLeitor").style.display = "block";
+    document.getElementById("subLeitor").style.display = "block";
+
+    startScanner();
+  } else {
+    document.getElementById("erroLogin").style.display = "block";
+  }
 }
 
-
-// ---------- 2) Função para validar formato do ingresso ----------
+/* ---------- 2) Formato válido ---------- */
 function formatoValido(textoQR) {
-  // Exemplo de formato aceito: ESIP-1234 ou somente número
-  return /^ESIP-\d+$/.test(textoQR) || /^\d+$/.test(textoQR);
+  return textoQR.startsWith("ESIP-");
 }
 
-
-// ---------- 3) Função para validar ingresso ----------
-function marcarUsado(id) {
-
-  if (!formatoValido(id)) {
-    erro("Formato inválido — isso NÃO é um ingresso ESIP!");
-    return;
-  }
-
-  let ingressos = JSON.parse(localStorage.getItem("ingressosESIP") || "[]");
-  const index = ingressos.findIndex(i => i.id == id);
-
-  if (index === -1) {
-    erro("❌ Ingresso não encontrado no sistema!");
-    return;
-  }
-
-  if (ingressos[index].usado) {
-    erro("⛔ Ingresso já utilizado!");
-    return;
-  }
-
-  ingressos[index].usado = true;
-  localStorage.setItem("ingressosESIP", JSON.stringify(ingressos));
-
-  sucesso("✅ Ingresso válido!<br>" +
-          "🎟 Tipo: " + ingressos[index].tipo + "<br>" +
-          "🆔 ID: " + ingressos[index].id);
-}
-
-
-// ---------- Estilos de resultado + som ----------
-function sucesso(msg) {
-  document.getElementById("result").style.background = "#b6ffb3";
-  document.getElementById("result").style.color = "#003300";
-  document.getElementById("result").innerHTML = msg;
-  document.getElementById("okSound").play();
-}
-
-function erro(msg) {
-  document.getElementById("result").style.background = "#ffb6b6";
-  document.getElementById("result").style.color = "#660000";
-  document.getElementById("result").innerHTML = msg;
-  document.getElementById("errorSound").play();
-}
-
-
-// ---------- 4) Iniciar o scanner ----------
+/* ---------- 3) Scanner ---------- */
 function startScanner() {
   const html5QrCode = new Html5Qrcode("reader");
 
@@ -123,15 +137,23 @@ function startScanner() {
     { facingMode: "environment" },
     { fps: 10, qrbox: 250 },
     (decodedText) => {
-      marcarUsado(decodedText.trim());
-    },
-    () => {}
+
+      if (!formatoValido(decodedText)) {
+        document.getElementById("result").style.background = "#ffcccc";
+        document.getElementById("result").innerHTML = "❌ Formato inválido!";
+        document.getElementById("errorSound").play();
+        return;
+      }
+
+      document.getElementById("result").style.background = "#ccffcc";
+      document.getElementById("result").innerHTML = "✅ Ingresso ESIP válido!";
+      document.getElementById("okSound").play();
+    }
   ).catch(err => {
-    erro("Erro ao acessar câmera! Permita o uso da câmera.");
+    document.getElementById("result").innerHTML =
+      "❌ Erro ao acessar câmera. Permita o uso.";
   });
 }
-
-startScanner();
 
 </script>
 
