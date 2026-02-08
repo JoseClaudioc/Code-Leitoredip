@@ -1,1 +1,352 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📡 ESIP - Sistemas</title>
 
+<script src="https://unpkg.com/html5-qrcode"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+body { background:#1a0000; color:#fff; font-family:Arial,sans-serif; text-align:center; margin:0; padding-bottom:40px; }
+h2{margin-top:20px;}
+#reader{width:350px;margin:20px auto;border:4px solid #ff0000;border-radius:12px;}
+.btn{background:#ff0000;color:white;padding:12px;border:none;border-radius:10px;font-size:16px;margin:8px auto;width:90%;}
+input{width:90%;padding:12px;border-radius:10px;border:none;font-size:16px;margin-top:8px;}
+#msgPop{display:none;position:fixed;top:-60px;left:50%;transform:translateX(-50%);padding:12px 20px;background:#ff4444;color:#fff;border-radius:12px;font-weight:bold;font-size:16px;z-index:9999;opacity:0;transition:all 0.5s ease;}
+#msgPop.green{background:#00ff88;color:#003300;}
+#msgPop.yellow{background:#ffaa00;color:#330000;}
+#msgPop.show{top:20px;opacity:1;}
+#history{margin-top:20px;padding:10px;}
+.badge{display:inline-block;margin:5px;padding:8px 14px;border-radius:30px;font-size:14px;background:#330000;border:1px solid #ff4444;color:#fff;}
+.badge.valid{background:#003314;border-color:#00ff88;}
+#counters{margin-top:10px;}
+.counter-box{background:#330000;border:2px solid #ff0000;padding:8px 12px;border-radius:10px;font-size:15px;margin:4px;display:inline-block;}
+.portaria-box{margin-top:10px;font-size:18px;font-weight:bold;}
+</style>
+</head>
+<body>
+
+<h2>📡 ESIP - Sistemas</h2>
+
+<div class="portaria-box">
+    🚪 Portaria: <span id="portariaAtual">A</span>
+</div>
+
+<!-- Campo para adicionar portaria personalizada -->
+<input id="portariaInput" placeholder="Digite a portaria (Ex: A, B, DF, A12, A3A)">
+<button id="setPortaria" class="btn">🔐 Definir Portaria</button>
+
+<div id="counters">
+    <div class="counter-box">Válidos: <span id="countValid">0</span></div>
+    <div class="counter-box">Usados: <span id="countUsed">0</span></div>
+    <div class="counter-box">Inválidos: <span id="countInvalid">0</span></div>
+    <div class="counter-box">🧠 Memória: <span id="countMemory">0</span></div>
+</div>
+
+<div id="reader"></div>
+
+<button id="toggleLight" class="btn">🔦 Lanterna</button>
+<button id="switchCam" class="btn">🔄 Trocar Câmera</button>
+<button id="adminPortaria" class="btn">🔐 Alternar Portaria</button>
+
+<input id="searchInput" placeholder="🔍 Buscar por ID">
+<button id="searchBtn" class="btn">🔎 Buscar por ID</button>
+
+<button id="reset" class="btn">🗑️ Resetar Ingressos</button>
+<button id="export" class="btn">📤 Exportar CSV</button>
+
+<input id="pdfTitulo" placeholder="📝 Título do PDF">
+<input id="pdfLogo" type="file" accept="image/*">
+
+<button id="exportPDF" class="btn">📄 Exportar PDF</button>
+
+<div id="msgPop"></div>
+
+<h3>📜 Histórico</h3>
+<div id="history"></div>
+
+<script>
+/* ===== CONFIG ===== */
+const STORAGE_USED_KEY = "usedCodesMap_v1";
+const STORAGE_PORTARIA = "portariaAtual";
+const STORAGE_COUNT_VALID = "countValid";
+const STORAGE_COUNT_USED = "countUsed";
+const STORAGE_COUNT_INVALID = "countInvalid";
+const RESET_PASSWORD = "ESIP2025"; // Senha para alterar a portaria
+
+/* ===== Sons ===== */
+const sValid   = new Audio("https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg");
+const sInvalid = new Audio("https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg");
+const sWarning = new Audio("https://actions.google.com/sounds/v1/cartoon/pop.ogg");
+
+/* ===== Estado ===== */
+let html5Qr, flashOn = true, scanning = true, currentCam = 0, cameras = [];
+let usedMap = {}, lastCode = "", lastTime = 0;
+
+let portaria = localStorage.getItem(STORAGE_PORTARIA) || "A";
+document.getElementById("portariaAtual").textContent = portaria;
+
+/* ===== Contadores ===== */
+let totalValid   = parseInt(localStorage.getItem(STORAGE_COUNT_VALID)   || "0");
+let totalUsed    = parseInt(localStorage.getItem(STORAGE_COUNT_USED)    || "0");
+let totalInvalid = parseInt(localStorage.getItem(STORAGE_COUNT_INVALID) || "0");
+
+/* ===== Funções Auxiliares ===== */
+function saveCounts(){
+    localStorage.setItem(STORAGE_COUNT_VALID,totalValid);
+    localStorage.setItem(STORAGE_COUNT_USED,totalUsed);
+    localStorage.setItem(STORAGE_COUNT_INVALID,totalInvalid);
+}
+function flash(type){
+    document.body.classList.add(type==="good"?"flash-ok":"flash-bad");
+    setTimeout(()=>document.body.classList.remove(type==="good"?"flash-ok":"flash-bad"),250);
+}
+function loadUsedMap(){
+    try { usedMap = JSON.parse(localStorage.getItem(STORAGE_USED_KEY)||"{}"); } 
+    catch { usedMap={}; }
+}
+function saveUsedMap(){
+    localStorage.setItem(STORAGE_USED_KEY,JSON.stringify(usedMap));
+    updateMemoryCount();
+}
+function updateHistory(){
+    const box = document.getElementById("history");
+    box.innerHTML = "";
+    Object.entries(usedMap).sort((a,b)=>b[1]-a[1]).forEach(([code, ts])=>{
+        const div = document.createElement("div");
+        div.className = "badge valid";
+        div.textContent = `✅ ${code} · ${new Date(ts).toLocaleString()}`;
+        box.appendChild(div);
+    });
+}
+function updateMemoryCount(){
+    document.getElementById("countMemory").textContent = Object.keys(usedMap).length;
+}
+function updateCountersUI(){
+    document.getElementById("countValid").textContent = totalValid;
+    document.getElementById("countUsed").textContent = totalUsed;
+    document.getElementById("countInvalid").textContent = totalInvalid;
+    updateMemoryCount();
+}
+
+/* ===== Validação ===== */
+function validateCode(code){
+    if(!code.startsWith("ID: ")) return false;
+    const clean = code.replace("ID: ","");
+    const parts = clean.split("-INGR-");
+    if(parts.length !== 2) return false;
+    return parts[0] === portaria;
+}
+
+/* ===== Pop-up ===== */
+function showPopup(text, ok){
+    const m = document.getElementById("msgPop");
+    m.textContent = text;
+    if(ok===true){ m.className="green show"; sValid.play(); }
+    else if(ok===false){ m.className="show"; sInvalid.play(); }
+    else { m.className="yellow show"; sWarning.play(); }
+    m.style.display="block";
+    setTimeout(()=>{
+        m.className = ok===true ? "green" : ok===false ? "" : "yellow";
+        m.style.display="none";
+    }, 2500);
+}
+
+/* ===== Processar QR ===== */
+function processQR(decodedText){
+    if(!scanning) return;
+    scanning = false;
+
+    const code = decodedText.trim();
+    const now = Date.now();
+
+    if(code === lastCode && now - lastTime < 3000){
+        scanning = true;
+        return;
+    }
+    lastCode = code;
+    lastTime = now;
+
+    if(!validateCode(code)){
+        totalInvalid++;
+        flash("bad");
+        navigator.vibrate?.([200,50,200]);
+        showPopup("❌ Portaria incorreta / QR inválido", false);
+    }
+    else if(!usedMap[code]){
+        usedMap[code] = now;
+        totalValid++;
+        flash("good");
+        navigator.vibrate?.([50,40,50]);
+        showPopup("✅ Ingresso válido", true);
+        updateHistory();
+    }
+    else{
+        totalUsed++;
+        flash("bad");
+        navigator.vibrate?.(120);
+        showPopup("⚠️ Já utilizado","aviso");
+    }
+
+    saveUsedMap();
+    saveCounts();
+    updateCountersUI();
+    setTimeout(()=>scanning=true,600);
+}
+
+/* ===== Definir portaria manualmente ===== */
+document.getElementById("setPortaria").onclick = () => {
+    const senha = prompt("Digite a senha para alterar a portaria:");
+    if (senha !== RESET_PASSWORD) {
+        showPopup("❌ Senha incorreta", false);
+        return;
+    }
+
+    const newPortaria = document.getElementById("portariaInput").value.trim();
+    if (!newPortaria) {
+        showPopup("🛑 Digite uma portaria válida", "aviso");
+        return;
+    }
+    portaria = newPortaria;
+    localStorage.setItem(STORAGE_PORTARIA, portaria);
+    document.getElementById("portariaAtual").textContent = portaria;
+    showPopup(`Portaria alterada para ${portaria}`, true);
+};
+
+/* ===== Alternar portaria A/B/C (admin) ===== */
+document.getElementById("adminPortaria").onclick = () => {
+    if(prompt("Senha admin") !== RESET_PASSWORD) return;
+    portaria = portaria === "A" ? "B" : portaria === "B" ? "C" : "A";
+    localStorage.setItem(STORAGE_PORTARIA, portaria);
+    document.getElementById("portariaAtual").textContent = portaria;
+    showPopup(`Portaria alterada para ${portaria}`, true);
+};
+
+/* ===== Buscar por ID ===== */
+document.getElementById("searchBtn").onclick = () => {
+    const code = document.getElementById("searchInput").value.trim();
+    if(!code) return showPopup("Digite um código","aviso");
+    if(usedMap[code]){
+        showPopup(`✅ USADO em ${new Date(usedMap[code]).toLocaleString()}`, true);
+    }else{
+        showPopup("⚠️ NÃO utilizado","aviso");
+    }
+};
+
+/* ===== Scanner ===== */
+async function startScanner(){
+    html5Qr = new Html5Qrcode("reader");
+    try{
+        cameras = await Html5Qrcode.getCameras();
+        if(!cameras || cameras.length===0){ showPopup("⚠️ Nenhuma câmera detectada","aviso"); return; }
+        await html5Qr.start(cameras[currentCam].id,{fps:10,qrbox:250},processQR);
+    }catch(err){
+        showPopup("❌ Erro ao iniciar câmera", false);
+        console.error(err);
+    }
+}
+startScanner();
+
+document.getElementById("switchCam").onclick = async () => {
+    if(!cameras || cameras.length===0) return;
+    currentCam = (currentCam+1) % cameras.length;
+    try{
+        await html5Qr.stop();
+        await startScanner();
+    }catch(err){
+        showPopup("❌ Erro ao trocar câmera", false);
+        console.error(err);
+    }
+};
+
+/* ===== Lanterna ===== */
+document.getElementById("toggleLight").onclick = async () => {
+    try{
+        const track = html5Qr.getRunningTrack();
+        if(!track){ showPopup("⚠️ Nenhuma câmera ativa","aviso"); return; }
+        const caps = track.getCapabilities?.();
+        if(!caps || !caps.torch){ showPopup("⚠️ Lanterna não suportada", false); return; }
+
+        flashOn = !flashOn;
+        await track.applyConstraints({advanced:[{torch:flashOn}]});
+        showPopup(flashOn?"🔦 Lanterna ligada":"🔦 Lanterna desligada", true);
+    }catch(err){
+        showPopup("❌ Erro ao ativar lanterna", false);
+        console.error(err);
+    }
+};
+
+/* ===== Resetar ===== */
+document.getElementById("reset").onclick = () => {
+    if(prompt("Senha") !== RESET_PASSWORD) return;
+    if(!confirm("Apagar tudo?")) return;
+    localStorage.clear();
+    location.reload();
+};
+
+/* ===== Export CSV ===== */
+document.getElementById("export").onclick = () => {
+    const dataExportacao = new Date().toLocaleString("pt-BR");
+    const rows = [["EXPORTADO_EM",dataExportacao],["codigo","data"]];
+    for(const [c,ts] of Object.entries(usedMap)) rows.push([c,new Date(ts).toLocaleString()]);
+    const csv = rows.map(r=>r.join(",")).join("\n");
+    const blob = new Blob([csv],{type:"text/csv"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "ingressos.csv";
+    a.click();
+};
+
+/* ===== Export PDF ===== */
+document.getElementById("exportPDF").onclick = async () => {
+    const titulo = document.getElementById("pdfTitulo").value.trim();
+    if(!titulo){ showPopup("🛑 Preencha o Título do PDF","aviso"); return; }
+
+    const dataExportacao = new Date().toLocaleString("pt-BR");
+    const logoInput = document.getElementById("pdfLogo");
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    let y = 15;
+
+    if(logoInput.files.length>0){
+        const file = logoInput.files[0];
+        const imgData = await new Promise(resolve=>{
+            const reader = new FileReader();
+            reader.onload = ()=>resolve(reader.result);
+            reader.readAsDataURL(file);
+        });
+        doc.addImage(imgData,"PNG",10,y,30,30);
+        y+=35;
+    }
+
+    doc.setFontSize(16);
+    const pageWidth = doc.internal.pageSize.getWidth();
+    doc.text(titulo,pageWidth/2,y+10,{align:"center"});
+    y+=20;
+
+    doc.setFontSize(12);
+    doc.text(`Portaria: ${portaria}`,10,y); y+=8;
+    doc.text(`Válidos: ${totalValid}`,10,y); y+=6;
+    doc.text(`Usados: ${totalUsed}`,10,y); y+=6;
+    doc.text(`Inválidos: ${totalInvalid}`,10,y); y+=6;
+    doc.text(`Exportado em: ${dataExportacao}`,10,y); y+=10;
+
+    for(const [code,ts] of Object.entries(usedMap)){
+        doc.text(`${code} - ${new Date(ts).toLocaleString()}`,10,y);
+        y+=7;
+        if(y>280){ doc.addPage(); y=10; }
+    }
+
+    doc.save(titulo+".pdf");
+};
+
+loadUsedMap();
+updateHistory();
+updateCountersUI();
+
+</script>
+
+</body>
+</html>
