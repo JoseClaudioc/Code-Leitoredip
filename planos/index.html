@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Planos ESIP Premium Responsivo Definitivo</title>
+
+<style>
+body{
+    margin:0;
+    font-family:Arial, Helvetica, sans-serif;
+    background:#0b1d33;
+    color:#ffffff;
+}
+
+.btn-voltar{
+    position:fixed;
+    top:20px;
+    left:20px;
+    background:#00ffcc;
+    color:#0b1d33;
+    border:none;
+    padding:10px 16px;
+    border-radius:8px;
+    font-weight:bold;
+    cursor:pointer;
+    box-shadow:0 0 15px rgba(0,0,0,0.4);
+    transition:0.3s;
+    z-index:2000;
+}
+.btn-voltar:hover{
+    background:#00e6b8;
+    transform:scale(1.05);
+}
+
+.container{
+    max-width:1000px;
+    margin:auto;
+    padding:60px 20px;
+    text-align:center;
+}
+
+h1{
+    margin-bottom:10px;
+}
+
+.subtitle{
+    color:#cbd5e1;
+    margin-bottom:50px;
+}
+
+.plan-boxes{
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    gap:30px;
+}
+
+.box{
+    background:#132b4f;
+    width:320px;
+    padding:40px 20px;
+    border-radius:12px;
+    cursor:pointer;
+    transition:all 0.4s ease;
+    box-shadow:0 0 25px rgba(0,0,0,0.4);
+    position:relative;
+    opacity:0;
+    transform:scale(0.9);
+}
+
+.box.visible{
+    opacity:1;
+    transform:scale(1);
+    transition:all 0.6s ease-out;
+}
+
+.box:hover{
+    transform:scale(1.05) translateY(-5px);
+    background:#173866;
+    box-shadow:0 0 35px rgba(0,255,204,0.5);
+}
+
+.box h2{
+    color:#4da6ff;
+    margin-bottom:10px;
+}
+
+.selo-offline{
+    position:absolute;
+    top:10px;
+    right:10px;
+    background:#00ffcc;
+    color:#0b1d33;
+    padding:8px 12px;
+    font-weight:bold;
+    border-radius:8px;
+    font-size:14px;
+    font-family:Arial, Helvetica, sans-serif;
+    animation:pulse 1.5s infinite;
+}
+
+@keyframes pulse{
+    0%{transform:scale(1);}
+    50%{transform:scale(1.1);}
+    100%{transform:scale(1);}
+}
+
+.modal{
+    display:none;
+    position:fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    background:rgba(0,0,0,0.85);
+    justify-content:center;
+    align-items:center;
+    overflow-y:auto;
+    padding:20px;
+    animation:fadeIn 0.5s ease;
+    z-index:1000;
+}
+
+@keyframes fadeIn{
+    from {opacity:0;}
+    to {opacity:1;}
+}
+
+.modal-content{
+    background:#132b4f;
+    width:90%;
+    max-width:600px;
+    padding:30px;
+    box-sizing:border-box;
+    border-radius:12px;
+    text-align:left;
+    position:relative;
+    animation:scaleUp 0.4s ease;
+    max-height:90vh;
+    overflow-y:auto;
+}
+
+@keyframes scaleUp{
+    from {transform:scale(0.9); opacity:0;}
+    to {transform:scale(1); opacity:1;}
+}
+
+.close{
+    position:absolute;
+    top:10px;
+    right:10px;
+    cursor:pointer;
+    font-size:24px;
+    background:#132b4f;
+    width:36px;
+    height:36px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:50%;
+}
+
+.modal-content h2{
+    color:#4da6ff;
+}
+
+ul{
+    padding-left:18px;
+}
+
+.option-title{
+    margin-top:20px;
+    color:#00ffcc;
+    font-weight:bold;
+}
+
+.price{
+    margin-top:10px;
+    font-size:18px;
+    color:#00ffcc;
+    font-weight:bold;
+}
+
+.btn{
+    display:block;
+    text-align:center;
+    margin-top:20px;
+    padding:12px;
+    background:#4da6ff;
+    color:#fff;
+    text-decoration:none;
+    border-radius:8px;
+    font-weight:bold;
+    transition:0.3s;
+}
+
+.btn:hover{
+    background:#2f89e0;
+}
+
+.compare-btn{
+    display:inline-block;
+    margin-top:30px;
+    padding:14px 22px;
+    background:#00ffcc;
+    color:#0b1d33;
+    font-weight:bold;
+    border-radius:8px;
+    cursor:pointer;
+    text-decoration:none;
+    transition:0.3s;
+}
+
+.compare-btn:hover{
+    background:#00e6b8;
+}
+
+.footer{
+    margin-top:60px;
+    font-size:14px;
+    color:#94a3b8;
+    text-align:center;
+}
+
+@media (max-width:768px){
+    .modal-content{
+        width:95% !important;
+        padding:20px;
+    }
+    .box{
+        width:90% !important;
+        padding:25px 15px;
+    }
+    .compare-btn{
+        width:90%;
+        padding:12px;
+        font-size:16px;
+    }
+    .selo-offline{
+        font-size:12px;
+        padding:5px 8px;
+    }
+    .close{
+        top:10px;
+        right:10px;
+        font-size:24px;
+    }
+    table{
+        font-size:14px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<!-- BOTÃO VOLTAR COM LINK DEFINIDO -->
+<button class="btn-voltar" type="button" onclick="window.location.href='https://sites.google.com/site/esipseguranca/portaria-digital'">← Voltar</button>
+
+<div class="container">
+<h1>ESIP - Gestão de Segurança</h1>
+<p class="subtitle">Sistema profissional que funciona mesmo sem internet.</p>
+
+<div class="plan-boxes">
+<div class="box" onclick="openModal('residencial')">
+<h2>🔐 Plano Residencial</h2>
+<p>Ideal para casas, condomínios e portarias pequenas</p>
+<div class="selo-offline">FUNCIONA OFFLINE</div>
+</div>
+
+<div class="box" onclick="openModal('empresarial')">
+<h2>🏢 Plano Empresarial</h2>
+<p>Ideal para empresas, escolas, clínicas e comércios</p>
+<div class="selo-offline">FUNCIONA OFFLINE</div>
+</div>
+</div>
+
+<a class="compare-btn" onclick="openModal('comparativo')">Comparar Planos</a>
+
+<p class="footer">
+ESIP – Gestão de Segurança | Operação contínua mesmo sem conexão com a internet.
+</p>
+</div>
+
+<!-- MODAIS -->
+<div id="residencial" class="modal">
+<div class="modal-content">
+<span class="close" onclick="closeModal('residencial')">&times;</span>
+<h2>Plano Residencial</h2>
+<ul>
+<li>✔ Implantação do sistema ESIP</li>
+<li>✔ Funcionamento offline</li>
+<li>✔ Controle de acesso com QR Code</li>
+<li>✔ Registro de entradas e saídas</li>
+<li>✔ Treinamento inicial</li>
+<li>✔ Suporte técnico</li>
+</ul>
+<div class="option-title">Opção Autônoma:</div>
+<div class="price">Implantação: R$ 497<br>Mensalidade: R$ 79</div>
+<div class="option-title">Opção Com Gestão ESIP:</div>
+<div class="price">Implantação: R$ 897<br>Mensalidade: R$ 147</div>
+<a href="https://wa.me/62994921159" class="btn">Solicitar Atendimento</a>
+</div>
+</div>
+
+<div id="empresarial" class="modal">
+<div class="modal-content">
+<span class="close" onclick="closeModal('empresarial')">&times;</span>
+<h2>Plano Empresarial</h2>
+<ul>
+<li>✔ Implantação completa</li>
+<li>✔ Funcionamento mesmo sem internet</li>
+<li>✔ Controle avançado de acesso</li>
+<li>✔ Emissão de protocolos institucionais</li>
+<li>✔ Supervisão estratégica ESIP</li>
+<li>✔ Suporte prioritário</li>
+</ul>
+<div class="option-title">Opção Autônoma:</div>
+<div class="price">Implantação: R$ 1.197<br>Mensalidade: R$ 197</div>
+<div class="option-title">Opção Com Gestão ESIP:</div>
+<div class="price">Implantação: R$ 1.497<br>Mensalidade: R$ 297</div>
+<a href="https://wa.me/62994921159" class="btn">Falar com Especialista</a>
+</div>
+</div>
+
+<div id="comparativo" class="modal">
+<div class="modal-content">
+<span class="close" onclick="closeModal('comparativo')">&times;</span>
+<h2>Comparativo de Planos ESIP</h2>
+<table style="width:100%; border-collapse: collapse; color:#fff;">
+<tr>
+<th style="border-bottom:1px solid #fff; padding:8px; text-align:left;">Recursos</th>
+<th style="border-bottom:1px solid #fff; padding:8px;">Plano Residencial</th>
+<th style="border-bottom:1px solid #fff; padding:8px;">Plano Empresarial</th>
+</tr>
+<tr>
+<td style="padding:8px;">Funcionamento Offline</td>
+<td style="padding:8px;">✔</td>
+<td style="padding:8px;">✔</td>
+</tr>
+<tr>
+<td style="padding:8px;">Controle de Acesso</td>
+<td style="padding:8px;">Básico (QR)</td>
+<td style="padding:8px;">Avançado (QR + Logs)</td>
+</tr>
+<tr>
+<td style="padding:8px;">Treinamento</td>
+<td style="padding:8px;">✔</td>
+<td style="padding:8px;">✔</td>
+</tr>
+<tr>
+<td style="padding:8px;">Suporte Técnico</td>
+<td style="padding:8px;">✔</td>
+<td style="padding:8px;">Prioritário</td>
+</tr>
+<tr>
+<td style="padding:8px;">Gestão ESIP</td>
+<td style="padding:8px;">Opcional</td>
+<td style="padding:8px;">Opcional</td>
+</tr>
+<tr>
+<td style="padding:8px;">Emissão de Protocolos</td>
+<td style="padding:8px;">✔</td>
+<td style="padding:8px;">✔</td>
+</tr>
+<tr>
+<td style="padding:8px;">Valor Implantação</td>
+<td style="padding:8px;">R$ 497 / 897</td>
+<td style="padding:8px;">R$ 1.197 / 1.497</td>
+</tr>
+<tr>
+<td style="padding:8px;">Mensalidade</td>
+<td style="padding:8px;">R$ 79 / 147</td>
+<td style="padding:8px;">R$ 197 / 297</td>
+</tr>
+</table>
+<a href="https://wa.me/62994921159" class="btn">Falar com Especialista</a>
+</div>
+</div>
+
+<script>
+function openModal(id){
+    document.getElementById(id).style.display = "flex";
+}
+function closeModal(id){
+    document.getElementById(id).style.display = "none";
+}
+
+// Fecha modal clicando fora
+window.onclick = function(event){
+    const modals = document.querySelectorAll('.modal');
+    modals.forEach(modal => {
+        if(event.target == modal){
+            modal.style.display = "none";
+        }
+    });
+}
+
+// Efeito fade-in + scale para planos
+const boxes = document.querySelectorAll('.box');
+const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+        if(entry.isIntersecting){
+            entry.target.classList.add('visible');
+            observer.unobserve(entry.target);
+        }
+    });
+},{threshold:0.2});
+
+boxes.forEach(box => observer.observe(box));
+</script>
+
+</body>
+</html>
