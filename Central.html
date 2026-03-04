@@ -1,1 +1,238 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ESIP - Sistemas</title>
 
+<style>
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    color: white;
+    overflow: hidden;
+}
+
+/* Container principal */
+#hero {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    min-height: 600px;
+    background: radial-gradient(circle at 20% 30%, #0d1b2a 0%, #050c18 40%, #01040a 100%);
+}
+
+/* Canvas */
+#spaceCanvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+/* Conteúdo central */
+#content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    width: 95%;
+    z-index: 2;
+}
+
+/* Ícone MUITO GRANDE */
+#icon {
+    font-size: 18vw;
+    margin-bottom: 40px;
+    animation: pulse 2.5s infinite;
+}
+
+/* Título GIGANTE */
+h1 {
+    font-size: 16vw;
+    margin: 0;
+    line-height: 1;
+    letter-spacing: 1vw;
+    animation: glow 3s ease-in-out infinite alternate;
+}
+
+/* Texto grande */
+p {
+    margin-top: 40px;
+    font-size: 5vw;
+    line-height: 1.4;
+    font-weight: 500;
+}
+
+/* Botão grande */
+#accessBtn {
+    margin-top: 50px;
+    padding: 2vw 6vw;
+    font-size: 4vw;
+    border-radius: 15px;
+    border: 3px solid #00ffff;
+    background: transparent;
+    color: #00ffff;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+#accessBtn:hover {
+    background: #00ffff;
+    color: #01040a;
+    box-shadow: 0 0 40px #00ffff, 0 0 80px #00ffff;
+    transform: scale(1.1);
+}
+
+/* Ajuste para telas grandes */
+@media (min-width: 1200px) {
+    #icon { font-size: 180px; }
+    h1 { font-size: 150px; }
+    p { font-size: 40px; }
+    #accessBtn { font-size: 28px; padding: 20px 60px; }
+}
+
+/* Animações */
+@keyframes glow {
+    from { text-shadow: 0 0 40px #00bfff, 0 0 80px #0077ff; }
+    to { text-shadow: 0 0 60px #33ccff, 0 0 120px #00bfff; }
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.15); }
+    100% { transform: scale(1); }
+}
+</style>
+</head>
+
+<body>
+<div id="hero">
+    <canvas id="spaceCanvas"></canvas>
+
+    <div id="content">
+        <div id="icon">📡</div>
+
+        <h1>ESIP</h1>
+
+        <p>
+            Gestão de segurança privada
+Tecnologia que conecta o mundo em um futuro tecnológico e Anti-fraude
+        </p>
+
+        <button id="accessBtn"
+            onclick="window.open('https://sites.google.com/site/esipseguranca', '_blank')">
+            🔐 ACESSAR SISTEMA
+        </button>
+    </div>
+</div>
+
+<script>
+(function(){
+    const canvas = document.getElementById("spaceCanvas");
+    const ctx = canvas.getContext("2d");
+
+    function resize(){
+        canvas.width = canvas.offsetWidth;
+        canvas.height = canvas.offsetHeight;
+    }
+    window.addEventListener("resize", resize);
+    resize();
+
+    const stars = [];
+    const meteors = [];
+    const nodes = [];
+
+    for(let i=0;i<200;i++){
+        stars.push({
+            x: Math.random()*canvas.width,
+            y: Math.random()*canvas.height,
+            size: Math.random()*2,
+            opacity: Math.random()
+        });
+    }
+
+    for(let i=0;i<30;i++){
+        nodes.push({
+            x: Math.random()*canvas.width,
+            y: Math.random()*canvas.height,
+            vx:(Math.random()-0.5)*0.5,
+            vy:(Math.random()-0.5)*0.5
+        });
+    }
+
+    function createMeteor(){
+        meteors.push({
+            x: Math.random()*canvas.width,
+            y: -50,
+            length: Math.random()*100+50,
+            speed: Math.random()*6+4,
+            opacity: Math.random()*0.8+0.2
+        });
+    }
+
+    function draw(){
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+
+        stars.forEach(s=>{
+            ctx.fillStyle="rgba(255,255,255,"+s.opacity+")";
+            ctx.fillRect(s.x,s.y,s.size,s.size);
+        });
+
+        nodes.forEach(n=>{
+            n.x+=n.vx;
+            n.y+=n.vy;
+            if(n.x<0||n.x>canvas.width) n.vx*=-1;
+            if(n.y<0||n.y>canvas.height) n.vy*=-1;
+
+            ctx.fillStyle="#00bfff";
+            ctx.beginPath();
+            ctx.arc(n.x,n.y,2,0,Math.PI*2);
+            ctx.fill();
+        });
+
+        for(let i=0;i<nodes.length;i++){
+            for(let j=i+1;j<nodes.length;j++){
+                const dx=nodes[i].x-nodes[j].x;
+                const dy=nodes[i].y-nodes[j].y;
+                const dist=Math.sqrt(dx*dx+dy*dy);
+                if(dist<120){
+                    ctx.strokeStyle="rgba(0,191,255,"+(1-dist/120)+")";
+                    ctx.lineWidth=0.5;
+                    ctx.beginPath();
+                    ctx.moveTo(nodes[i].x,nodes[i].y);
+                    ctx.lineTo(nodes[j].x,nodes[j].y);
+                    ctx.stroke();
+                }
+            }
+        }
+
+        meteors.forEach((m,i)=>{
+            ctx.beginPath();
+            ctx.moveTo(m.x,m.y);
+            ctx.lineTo(m.x+m.length*0.4,m.y+m.length);
+            ctx.strokeStyle="rgba(255,255,255,"+m.opacity+")";
+            ctx.lineWidth=2;
+            ctx.stroke();
+
+            m.y+=m.speed;
+            m.x+=m.speed*0.4;
+
+            if(m.y>canvas.height){
+                meteors.splice(i,1);
+            }
+        });
+
+        requestAnimationFrame(draw);
+    }
+
+    setInterval(createMeteor,300);
+    draw();
+})();
+</script>
+</body>
+</html>
