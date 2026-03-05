@@ -1,1 +1,248 @@
-i
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Central Digital Anti-Fraude</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --bg:#0a0a0a;
+  --panel:#111;
+  --primary:#00ffff;
+  --secondary:#ff00ff;
+}
+
+*{margin:0;padding:0;box-sizing:border-box;}
+
+body{
+  font-family:'Orbitron',sans-serif;
+  background:var(--bg);
+  color:white;
+  display:flex;
+  flex-direction:row;
+  min-height:100vh;
+}
+
+/* MENU LATERAL */
+.sidebar{
+  width:250px;
+  background:#050505;
+  border-right:2px solid var(--primary);
+  padding:20px;
+  flex-shrink:0;
+}
+
+.sidebar h2{
+  color:var(--primary);
+  margin-bottom:20px;
+  text-align:center;
+  font-size:1.2rem;
+}
+
+.sidebar button{
+  width:100%;
+  margin-bottom:15px;
+  padding:10px;
+  background:transparent;
+  border:1px solid var(--primary);
+  color:var(--primary);
+  cursor:pointer;
+  border-radius:6px;
+  transition:0.2s;
+}
+
+.sidebar button:hover{
+  background:var(--primary);
+  color:black;
+}
+
+/* CONTEÚDO PRINCIPAL */
+.content{
+  flex:1;
+  padding:40px;
+  display:flex;
+  justify-content:center;
+  align-items:flex-start;
+}
+
+.card{
+  background:var(--panel);
+  padding:30px;
+  border:1px solid var(--primary);
+  border-radius:12px;
+  max-width:700px;
+  width:100%;
+  box-shadow:0 0 15px rgba(0,255,255,0.2);
+}
+
+.card h1{
+  color:var(--primary);
+  margin-bottom:15px;
+  font-size:1.8rem;
+}
+
+.card p{
+  margin-bottom:20px;
+  color:#ccc;
+  font-size:1rem;
+  line-height:1.5;
+}
+
+.card a{
+  display:inline-block;
+  padding:10px 20px;
+  border:2px solid var(--primary);
+  border-radius:8px;
+  text-decoration:none;
+  color:var(--primary);
+  transition:0.2s;
+}
+
+.card a:hover{
+  background:var(--primary);
+  color:black;
+}
+
+.metric{
+  font-size:1.3rem;
+  margin-top:20px;
+  color:var(--secondary);
+  word-break: break-word;
+}
+
+/* RESPONSIVO */
+@media (max-width: 900px){
+  body{
+    flex-direction:column;
+  }
+  .sidebar{
+    width:100%;
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+  }
+  .sidebar button{
+    flex:1 1 40%;
+    margin:5px;
+  }
+  .content{
+    padding:20px;
+  }
+  .card{
+    padding:20px;
+  }
+  .card h1{
+    font-size:1.5rem;
+  }
+  .card p, .metric{
+    font-size:1rem;
+  }
+}
+
+@media (max-width: 500px){
+  .sidebar button{
+    flex:1 1 100%;
+  }
+  .card{
+    padding:15px;
+  }
+  .card h1{
+    font-size:1.3rem;
+  }
+  .card p, .metric{
+    font-size:0.95rem;
+  }
+}
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+  <h2>📡 ESIP Central Anti-Fraude: monitoramento inteligente, proteção e gestão contínua</h2>
+  <button onclick="loadPage('acesso')">🔐 + ACESSO</button>
+  <button onclick="loadPage('tecnologia')">📡 Tecnologia</button>
+  <button onclick="loadPage('conscientizacao')">✅ Conscientização</button>
+  <button onclick="loadPage('transparencia')">🚀 Transparência</button>
+</div>
+
+<div class="content">
+  <div id="pageContainer" class="card">
+    <h1>Bem-vindo</h1>
+    <p>Selecione uma área no menu para visualizar informações do sistema antifraude.</p>
+  </div>
+</div>
+
+<script>
+let riskScore = 18;
+
+/* SIMULAÇÃO ANTIFRAUDE */
+setInterval(()=>{
+  if(Math.random() < 0.3){
+    riskScore += 4;
+  } else {
+    riskScore -= 2;
+  }
+  riskScore = Math.max(5, Math.min(100, riskScore));
+},2000);
+
+/* CONFIGURAÇÃO DE PÁGINAS */
+const pages = {
+  "acesso": {
+    title:"🔐 + ACESSO",
+    text:"Autorize visitantes facilmente usando nossa plataforma e um QR ID único para cada pessoa.",
+    link:"https://sites.google.com/site/esipseguranca"
+  },
+  "tecnologia": {
+    title:"📡 Tecnologia",
+    text:"Sistema baseado em inteligência artificial e análise comportamental avançada."
+  },
+  "conscientizacao": {
+    title:"✅ Conscientização",
+    text:"Educação digital preventiva para evitar golpes e ataques online."
+  },
+  "transparencia": {
+    title:"🚀 Transparência",
+    text:"Relatórios públicos e métricas abertas de segurança digital."
+  }
+};
+
+let metricInterval = null;
+
+function loadPage(type){
+  const page = pages[type];
+  const container = document.getElementById("pageContainer");
+
+  let linkHTML = "";
+
+  // Só cria botão se houver link definido
+  if(page.link){
+    linkHTML = `
+      <a href="${page.link}" target="_blank" rel="noopener noreferrer">
+        Acessar Plataforma
+      </a>
+    `;
+  }
+
+  container.innerHTML = `
+    <h1>${page.title}</h1>
+    <p>${page.text}</p>
+    ${linkHTML}
+    <div class="metric">Score Atual de Risco: ${riskScore}%</div>
+  `;
+
+  if(metricInterval) clearInterval(metricInterval);
+
+  metricInterval = setInterval(()=>{
+    const metric = container.querySelector(".metric");
+    if(metric){
+      metric.textContent = "Score Atual de Risco: " + riskScore + "%";
+    }
+  },1000);
+}
+</script>
+
+</body>
+</html>
