@@ -1,1 +1,365 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Gerador Profissional de Documentos</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<style>
+/* ===== VARIÁVEIS DE CORES ===== */
+:root {
+  --corPrimaria: #0b3d91;      /* azul marinho */
+  --corHover: #072f6b;         /* hover azul escuro */
+  --fundo: #0b3d91;            /* fundo sistema */
+  --telaLicenca: #0b3d91;      /* tela login */
+  --corTextoLicenca: #ffffff;  /* texto login */
+  --corCampos: #ffffff;        /* campos brancos */
+  --corTextoCampos: #000000;   /* texto dentro dos campos */
+  --pdfCabecalho: #0b3d91;     /* cabeçalho PDF azul marinho */
+  --pdfCabecalhoTexto: #ffffff; /* texto cabeçalho PDF branco */
+  --pdfLinhaPar: #e6ebf5;      /* linha par PDF clara */
+  --pdfLinhaImpar: #ffffff;    /* linha impar PDF branco */
+  --pdfTotal: #072f6b;         /* total PDF azul escuro */
+}
+
+/* ===== TELA LICENÇA ===== */
+#licencaTela {
+  position: fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background: var(--telaLicenca);
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  color: var(--corTextoLicenca);
+  z-index:999;
+}
+#licencaTela input {
+  width:250px;
+  padding:10px;
+  margin:10px 0;
+  border-radius:6px;
+  border:none;
+  background: var(--corCampos);
+  color: var(--corTextoCampos);
+}
+#erroLicenca { color:#ff6b6b; }
+
+/* ===== ESTILOS GERAIS ===== */
+body {
+  font-family: Arial, sans-serif;
+  background: var(--fundo);
+  padding: 20px;
+  color: #fff;
+}
+.container {
+  background: var(--fundo);
+  padding:25px;
+  width: 100%;
+  margin:0 auto;
+  border-radius:10px;
+}
+
+input, textarea, select {
+  width: 100%;
+  padding:10px;
+  margin:6px 0;
+  border-radius:6px;
+  border:1px solid #ccc;
+  box-sizing:border-box;
+  background: var(--corCampos);
+  color: var(--corTextoCampos);
+}
+
+/* ===== BOTÕES ESTILIZADOS ===== */
+button {
+  background: var(--corPrimaria);
+  color: white;
+  padding: 12px 20px;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+  font-weight:bold;
+  font-size:14px;
+  box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+  transition: all 0.2s ease;
+}
+button:hover {
+  background: var(--corHover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+}
+
+table {
+  width:100%;
+  border-collapse:collapse;
+  margin-top:15px;
+  background: var(--corCampos);
+  color: var(--corTextoCampos);
+}
+tr, th, td {
+  border:1px solid #ddd;
+  padding:8px;
+}
+th { background: #f2f2f2; }
+.removeBtn { background:red; color:white; }
+.total { font-size:24px; font-weight:bold; }
+
+/* ===== PDF ===== */
+#pdf {
+  width:170mm;
+  min-height:297mm;
+  padding:20mm;
+  margin:auto;
+  box-sizing:border-box;
+  position:relative;
+  background:white;
+  color:#000;
+}
+
+#pdf .header {
+  display:flex;
+  align-items:center;
+  gap:20px;
+  border-bottom:3px solid var(--corPrimaria);
+  padding-bottom:12px;
+  margin-bottom:20px;
+  background: var(--pdfCabecalho);
+  color: var(--pdfCabecalhoTexto);
+}
+#pdf .logo { width:90px; height:auto; object-fit:contain; }
+#pdf .headerInfo h1 { margin:0; font-size:20px; color: var(--pdfCabecalhoTexto); }
+#pdf .headerInfo p { margin:2px 0; font-size:13px; color: var(--pdfCabecalhoTexto); }
+#pdf .tituloDocumento { text-align:center; font-size:24px; margin:20px 0; font-weight:bold; color: var(--corPrimaria); }
+#pdf table { width:100%; border-collapse:collapse; margin-bottom:15px; }
+#pdf th { background: var(--pdfCabecalho); color: var(--pdfCabecalhoTexto); padding:8px; }
+#pdf td { padding:8px; }
+#pdf tr:nth-child(even) td { background: var(--pdfLinhaPar); }
+#pdf tr:nth-child(odd) td { background: var(--pdfLinhaImpar); }
+#pdf .total { color: var(--pdfTotal); }
+#pdf .rodape { position:absolute; bottom:15mm; left:20mm; right:20mm; text-align:center; font-size:11px; color: var(--pdfCabecalho); }
+
+/* ===== RESPONSIVIDADE ===== */
+@media (max-width:768px){
+  body { padding:10px; }
+  .container { padding:15px; width:100%; }
+  .header { flex-direction:column; text-align:center; }
+  .logo { width:60px; }
+  /* Somente tabelas de tela, não PDF */
+  #tabelaItens, #tabelaItens thead, #tabelaItens tbody, #tabelaItens tr, #tabelaItens td, #tabelaItens th {
+    display:block;
+    width:100%;
+  }
+  .tabelaTela td::before { content: attr(data-label); font-weight:bold; display:block; }
+  .removeBtn, button { width:100%; margin-top:5px; }
+}
+</style>
+</head>
+
+<body>
+
+<!-- TELA LICENÇA -->
+<div id="licencaTela">
+  <h2>Sistema Protegido</h2>
+  <p>Digite sua licença</p>
+  <input type="password" id="senhaLicenca" placeholder="Digite a licença">
+  <button onclick="verificarLicenca()">Entrar</button>
+  <p id="erroLicenca"></p>
+</div>
+
+<div class="container">
+<h2>Gerador de Documentos</h2>
+<select id="tipoDoc">
+<option>Orçamento</option>
+<option>Proposta</option>
+<option>Ordem de Serviço</option>
+<option>Contrato</option>
+<option>Relatório</option>
+<option>Recibo</option>
+</select>
+
+<h3>Empresa</h3>
+<input id="empresa" placeholder="Empresa">
+<input id="cnpj" placeholder="CNPJ">
+<input id="telefone" placeholder="Telefone">
+<input id="email" placeholder="Email">
+<input type="file" id="logoUpload">
+
+<h3>Cliente</h3>
+<input id="cliente" placeholder="Cliente">
+<label>Descrição</label>
+<textarea id="descricao"></textarea>
+<label>Observações</label>
+<textarea id="obs"></textarea>
+
+<h3>Itens</h3>
+<button onclick="addItem()">Adicionar Item</button>
+<table id="tabelaItens" class="tabelaTela">
+<tr><th>Item</th><th>Descrição</th><th>Valor</th><th></th></tr>
+</table>
+
+<h3>QR Code</h3>
+<input id="link" placeholder="Link para QR Code">
+<button onclick="gerarQR()">Gerar QR Code</button>
+<div id="qrcode"></div>
+<br><br>
+
+<button onclick="gerarPDF()">Gerar PDF</button>
+
+<hr>
+
+<!-- AREA PDF -->
+<div id="pdf">
+<img id="watermark" class="watermark">
+<div class="header">
+<img id="logoImg" class="logo">
+<div class="headerInfo">
+<h1 id="tituloEmpresa"></h1>
+<p id="dadosEmpresa"></p>
+<p id="numeroDoc"></p>
+<p id="dataDoc"></p>
+</div>
+</div>
+
+<div class="tituloDocumento" id="tituloDoc"></div>
+
+<table>
+<tr><th>Cliente</th><td id="pdfCliente"></td></tr>
+</table>
+
+<h3>Itens</h3>
+<table id="pdfItens">
+<tr><th>Item</th><th>Descrição</th><th>Valor</th></tr>
+</table>
+
+<h3>Descrição</h3>
+<p id="pdfDescricao"></p>
+
+<h3>Observações</h3>
+<p id="pdfObs"></p>
+
+<div style="text-align:right">
+<h2>TOTAL</h2>
+<p class="total" id="pdfTotal"></p>
+</div>
+
+<hr>
+<div>
+<b>Contato</b>
+<p id="pdfContato"></p>
+<p id="pdfEmail"></p>
+<br>
+<img id="qrImg" width="120">
+</div>
+
+<div class="rodape">Documento gerado eletronicamente</div>
+</div>
+
+</div>
+
+<script>
+const licencasValidas = ["MASTER123","PRO2025","LICENCA123"];
+function verificarLicenca(){
+  let senha = document.getElementById("senhaLicenca").value;
+  if(licencasValidas.includes(senha)){
+    document.getElementById("licencaTela").style.display="none";
+  } else { document.getElementById("erroLicenca").innerText="Licença inválida"; }
+}
+
+let qrBase64="";
+function moedaBR(v){ return Number(v).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});}
+function parseBR(v){ if(!v) return 0; v=v.replace(/[R$\s]/g,"").replace(/\./g,",").replace(",","."); return parseFloat(v)||0;}
+
+function addItem(){
+  let linha=document.getElementById("tabelaItens").insertRow();
+  linha.innerHTML=`<td data-label="Item"><input></td><td data-label="Descrição"><input></td><td data-label="Valor"><input class="valor"></td><td data-label="Ação"><button class="removeBtn" onclick="removerItem(this)">X</button></td>`;
+}
+function removerItem(btn){ btn.parentNode.parentNode.remove(); }
+
+function gerarNumeroDocumento(){ return Math.floor(100000 + Math.random()*900000); }
+
+function gerarQR(){
+  let link=document.getElementById("link").value;
+  if(!link){ alert("Informe um link"); return; }
+  let container=document.getElementById("qrcode");
+  container.innerHTML="";
+  new QRCode(container,{text:link,width:120,height:120});
+  setTimeout(()=>{ let canvas=container.querySelector("canvas"); if(canvas) qrBase64=canvas.toDataURL("image/png"); },300);
+}
+
+document.getElementById("logoUpload").addEventListener("change",function(){
+  let reader=new FileReader();
+  reader.onload=function(e){
+    document.getElementById("logoImg").src=e.target.result;
+    document.getElementById("watermark").src=e.target.result;
+  }
+  reader.readAsDataURL(this.files[0]);
+});
+
+function adicionarNumeracao(pdf){
+  let total=pdf.internal.getNumberOfPages();
+  for(let i=1;i<=total;i++){
+    pdf.setPage(i);
+    pdf.setFontSize(9);
+    pdf.text("Página "+i+" de "+total,pdf.internal.pageSize.getWidth()-40,pdf.internal.pageSize.getHeight()-10);
+  }
+}
+
+function gerarPDF(){
+  const tipoDoc=document.getElementById("tipoDoc").value;
+  const empresa=document.getElementById("empresa").value;
+  const cliente=document.getElementById("cliente").value;
+  if(!empresa || !cliente){ alert("Preencha empresa e cliente"); return; }
+
+  document.getElementById("tituloDoc").innerText=tipoDoc;
+  document.getElementById("tituloEmpresa").innerText=empresa;
+  document.getElementById("dadosEmpresa").innerText="CNPJ: "+document.getElementById("cnpj").value;
+  document.getElementById("numeroDoc").innerText="Protocolo Nº "+gerarNumeroDocumento();
+  document.getElementById("dataDoc").innerText=new Date().toLocaleDateString("pt-BR");
+  document.getElementById("pdfCliente").innerText=cliente;
+  document.getElementById("pdfDescricao").innerText=document.getElementById("descricao").value;
+  document.getElementById("pdfObs").innerText=document.getElementById("obs").value;
+  document.getElementById("pdfContato").innerText=document.getElementById("telefone").value;
+  document.getElementById("pdfEmail").innerText=document.getElementById("email").value;
+  document.getElementById("qrImg").src=qrBase64;
+
+  let tabelaPDF=document.getElementById("pdfItens");
+  tabelaPDF.innerHTML=`<tr><th>Item</th><th>Descrição</th><th>Valor</th></tr>`;
+
+  let total=0;
+  const linhas=document.querySelectorAll("#tabelaItens tr:not(:first-child)");
+  linhas.forEach(linha=>{
+    const inputs=linha.querySelectorAll("input");
+    let item=inputs[0].value;
+    let desc=inputs[1].value;
+    let valor=parseBR(inputs[2].value);
+    if(!item && !desc && !valor) return;
+    let nova=tabelaPDF.insertRow();
+    nova.innerHTML=`<td>${item}</td><td>${desc}</td><td>${moedaBR(valor)}</td>`;
+    total+=valor;
+  });
+  document.getElementById("pdfTotal").innerText=moedaBR(total);
+
+  const elemento=document.getElementById("pdf");
+  html2pdf().set({
+    margin:[20,20,20,20],
+    filename:tipoDoc+"_"+cliente+".pdf",
+    image:{type:"jpeg",quality:1},
+    html2canvas:{scale:3,scrollY:0},
+    jsPDF:{unit:"mm",format:"a4",orientation:"portrait"},
+    pagebreak:{mode:['css','legacy','avoid-all']}
+  }).from(elemento).toPdf().get('pdf').then(function(pdf){
+    adicionarNumeracao(pdf);
+    pdf.save(tipoDoc+"_"+cliente+".pdf");
+  });
+}
+</script>
+
+</body>
+</html>
