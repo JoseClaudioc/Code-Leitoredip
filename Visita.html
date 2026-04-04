@@ -1,1 +1,288 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<title>Check-in PRO MASTER</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<style>
+body {
+    font-family: Arial;
+    background: #111;
+    color: #fff;
+    text-align: center;
+    padding: 15px;
+}
+
+input, textarea {
+    width: 90%;
+    padding: 10px;
+    margin: 5px;
+    border-radius: 8px;
+    border: none;
+}
+
+button {
+    width: 90%;
+    padding: 14px;
+    margin: 5px;
+    border-radius: 10px;
+    border: none;
+    font-size: 16px;
+}
+
+#start { background: green; }
+#end { background: red; }
+#pdf { background: blue; }
+#zap { background: #25D366; }
+
+img { max-width: 100%; margin: 10px 0; }
+
+.box {
+    border: 1px solid #ccc;
+    padding: 10px;
+    margin: 8px 0;
+    border-radius: 8px;
+}
+</style>
+</head>
+
+<body>
+
+<h2>📍 Check-in PRO MASTER</h2>
+
+<input id="empresa" placeholder="Empresa">
+<input id="cliente" placeholder="Cliente">
+<input id="tecnico" placeholder="Técnico">
+<input id="video" placeholder="Link do vídeo">
+
+<input type="file" id="logoInput" accept="image/*">
+
+<textarea id="obs" placeholder="Observações"></textarea>
+
+<button id="start">INICIAR</button>
+<button id="end">FINALIZAR</button>
+<button id="pdf">GERAR PDF PREMIUM</button>
+<button id="zap">ENVIAR WHATSAPP</button>
+
+<h3>📊 Histórico</h3>
+<div id="historico"></div>
+
+<input type="file" accept="image/*" capture="camera" id="camera" hidden>
+<img id="preview">
+
+<div id="relatorio" style="display:none;"></div>
+
+<script>
+// ELEMENTOS
+const logoInput = document.getElementById("logoInput");
+const start = document.getElementById("start");
+const end = document.getElementById("end");
+const pdf = document.getElementById("pdf");
+const zap = document.getElementById("zap");
+const camera = document.getElementById("camera");
+const preview = document.getElementById("preview");
+const historico = document.getElementById("historico");
+const relatorio = document.getElementById("relatorio");
+
+const empresa = document.getElementById("empresa");
+const cliente = document.getElementById("cliente");
+const tecnico = document.getElementById("tecnico");
+const video = document.getElementById("video");
+const obs = document.getElementById("obs");
+
+let logoBase64 = "";
+
+// LOGO
+logoInput.onchange = e => {
+    let reader = new FileReader();
+    reader.onload = ev => logoBase64 = ev.target.result;
+    reader.readAsDataURL(e.target.files[0]);
+};
+
+// GPS CORRIGIDO
+function getLocation(cb){
+    if (!navigator.geolocation){
+        cb({lat:"-", lng:"-"});
+        return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+        pos=>{
+            cb({
+                lat: pos.coords.latitude.toFixed(6),
+                lng: pos.coords.longitude.toFixed(6)
+            });
+        },
+        err=>{
+            alert("Ative o GPS");
+            cb({lat:"-", lng:"-"});
+        },
+        { enableHighAccuracy:true, timeout:10000 }
+    );
+}
+
+// FOTO OTIMIZADA (SEM FICAR GIGANTE)
+function foto(cb){
+    camera.click();
+    camera.onchange = ()=>{
+        let file = camera.files[0];
+
+        let reader = new FileReader();
+        reader.onload = e => {
+            let img = new Image();
+            img.onload = () => {
+
+                let canvas = document.createElement("canvas");
+                let ctx = canvas.getContext("2d");
+
+                let maxW = 800;
+                let scale = maxW / img.width;
+
+                canvas.width = maxW;
+                canvas.height = img.height * scale;
+
+                ctx.drawImage(img,0,0,canvas.width,canvas.height);
+
+                let base64 = canvas.toDataURL("image/jpeg",0.7);
+
+                preview.src = base64;
+                cb(base64);
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    };
+}
+
+// INICIAR
+start.onclick=()=>{
+    getLocation(loc=>{
+        foto(f=>{
+            let dados={
+                id:"REL-"+Date.now(),
+                empresa:empresa.value,
+                cliente:cliente.value,
+                tecnico:tecnico.value,
+                video:video.value,
+                logo: logoBase64,
+                inicio:new Date().toLocaleString(),
+                lat:loc.lat,
+                lng:loc.lng,
+                foto_inicio:f,
+                obs_inicio:obs.value
+            };
+            localStorage.setItem("visita",JSON.stringify(dados));
+            alert("Iniciado");
+        });
+    });
+};
+
+// FINALIZAR
+end.onclick=()=>{
+    let d=JSON.parse(localStorage.getItem("visita"));
+    if(!d){
+        alert("Inicie primeiro");
+        return;
+    }
+
+    getLocation(loc=>{
+        foto(f=>{
+            d.fim=new Date().toLocaleString();
+            d.foto_fim=f;
+            d.obs_fim=obs.value;
+
+            let hist=JSON.parse(localStorage.getItem("historico")||"[]");
+            hist.push(d);
+            localStorage.setItem("historico",JSON.stringify(hist));
+
+            renderHist();
+            alert("Finalizado");
+        });
+    });
+};
+
+// HISTÓRICO
+function renderHist(){
+    let hist=JSON.parse(localStorage.getItem("historico")||"[]");
+    historico.innerHTML="";
+    hist.slice().reverse().forEach(h=>{
+        historico.innerHTML+=`<div class="box">${h.cliente} - ${h.inicio}</div>`;
+    });
+}
+renderHist();
+
+// PDF COM MAPA
+pdf.onclick = async () => {
+
+    let hist = JSON.parse(localStorage.getItem("historico"));
+    if(!hist || hist.length===0){
+        alert("Sem dados");
+        return;
+    }
+
+    let d = hist[hist.length-1];
+
+    relatorio.innerHTML = `
+    <div style="background:#fff;color:#000;padding:20px;font-family:Arial;">
+
+        <h2>${d.empresa}</h2>
+        <p><b>ID:</b> ${d.id}</p>
+
+        <h3>Cliente</h3>
+        <p>${d.cliente}</p>
+
+        <h3>Localização</h3>
+        <p>${d.lat}, ${d.lng}</p>
+
+        <a href="https://maps.google.com/?q=${d.lat},${d.lng}">
+        Abrir no mapa
+        </a>
+
+        <br><br>
+
+        <img src="https://maps.googleapis.com/maps/api/staticmap?center=${d.lat},${d.lng}&zoom=15&size=600x300&markers=${d.lat},${d.lng}">
+
+        <div id="qrMapa"></div>
+
+        <h3>Fotos</h3>
+        <img src="${d.foto_inicio}">
+        <img src="${d.foto_fim}">
+
+    </div>
+    `;
+
+    relatorio.style.display="block";
+
+    const qrMapa = document.getElementById("qrMapa");
+
+    new QRCode(qrMapa,{
+        text:`https://maps.google.com/?q=${d.lat},${d.lng}`,
+        width:120,
+        height:120
+    });
+
+    await new Promise(r=>setTimeout(r,1500));
+
+    await html2pdf().from(relatorio).save("relatorio.pdf");
+
+    relatorio.style.display="none";
+};
+
+// WHATSAPP
+zap.onclick=()=>{
+    let hist=JSON.parse(localStorage.getItem("historico"));
+    if(!hist) return;
+
+    let d=hist[hist.length-1];
+
+    window.open(`https://wa.me/?text=Relatório ${d.cliente}`);
+};
+</script>
+
+</body>
+</html>
