@@ -1,1 +1,191 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<title>Check-in PRO MASTER</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<style>
+body { font-family: Arial; background:#111; color:#fff; text-align:center; }
+input, textarea, button { width:90%; margin:5px; padding:10px; border-radius:8px; border:none; }
+button { font-size:16px; }
+
+#start{background:green;}
+#end{background:red;}
+#pdf{background:blue;}
+#zap{background:#25D366;}
+
+video{
+    width:90%;
+    max-height:250px;
+    border-radius:10px;
+    margin-top:10px;
+}
+canvas{display:none;}
+
+.relatorio{width:800px;background:#fff;color:#000;padding:20px;}
+</style>
+</head>
+
+<body>
+
+<h2>📍 Check-in PRO MASTER</h2>
+
+<input id="empresa" placeholder="Empresa">
+<input id="cliente" placeholder="Cliente">
+<input id="tecnico" placeholder="Técnico">
+<input id="videoLink" placeholder="Link do vídeo">
+
+<textarea id="obs" placeholder="Observações"></textarea>
+
+<button id="start">INICIAR</button>
+<button id="end">FINALIZAR</button>
+<button id="pdf">GERAR PDF</button>
+<button id="zap">WHATSAPP</button>
+
+<video id="preview" autoplay playsinline></video>
+<canvas id="canvas"></canvas>
+
+<div id="relatorio" style="display:none;"></div>
+
+<script>
+const App = { dados:{} };
+
+const preview = document.getElementById("preview");
+const canvas = document.getElementById("canvas");
+
+// 📸 CAMERA PRO
+async function iniciarCamera(){
+    try{
+        const stream = await navigator.mediaDevices.getUserMedia({ video:true });
+        preview.srcObject = stream;
+        return stream;
+    }catch{
+        alert("Câmera não disponível");
+        return null;
+    }
+}
+
+function capturarFoto(){
+    try{
+        const ctx = canvas.getContext("2d");
+        canvas.width = preview.videoWidth;
+        canvas.height = preview.videoHeight;
+        ctx.drawImage(preview,0,0);
+        return canvas.toDataURL("image/png");
+    }catch{
+        return "";
+    }
+}
+
+// 📍 GPS
+function getLocation(){
+    return new Promise(resolve=>{
+        navigator.geolocation.getCurrentPosition(
+            pos => resolve({lat:pos.coords.latitude,lng:pos.coords.longitude}),
+            () => resolve({lat:"0",lng:"0"})
+        );
+    });
+}
+
+// INICIAR
+document.getElementById("start").onclick = async ()=>{
+    const empresa = document.getElementById("empresa").value;
+    const cliente = document.getElementById("cliente").value;
+    const tecnico = document.getElementById("tecnico").value;
+
+    if(!empresa || !cliente || !tecnico){
+        alert("Preencha tudo");
+        return;
+    }
+
+    const stream = await iniciarCamera();
+    const loc = await getLocation();
+
+    App.dados = {
+        id:"REL-"+Date.now(),
+        empresa, cliente, tecnico,
+        inicio:new Date().toLocaleString(),
+        lat:loc.lat, lng:loc.lng,
+        stream
+    };
+
+    alert("Clique em FINALIZAR para tirar a foto");
+};
+
+// FINALIZAR
+document.getElementById("end").onclick = async ()=>{
+    const d = App.dados;
+    if(!d.id){ alert("Inicie primeiro"); return; }
+
+    const loc = await getLocation();
+    const foto = capturarFoto();
+
+    d.fim = new Date().toLocaleString();
+    d.foto = foto;
+    d.lat = loc.lat;
+    d.lng = loc.lng;
+
+    if(d.stream){
+        d.stream.getTracks().forEach(t=>t.stop());
+    }
+
+    localStorage.setItem("relatorio", JSON.stringify(d));
+
+    alert("Finalizado ✅");
+};
+
+// PDF
+document.getElementById("pdf").onclick = ()=>{
+    const d = JSON.parse(localStorage.getItem("relatorio")||"null");
+    if(!d){ alert("Sem dados"); return; }
+
+    const div = document.getElementById("relatorio");
+
+    div.innerHTML = `
+    <div id="pdfContent" class="relatorio">
+        <h2>${d.empresa}</h2>
+        <p>Cliente: ${d.cliente}</p>
+        <p>Técnico: ${d.tecnico}</p>
+        <p>Início: ${d.inicio}</p>
+        <p>Fim: ${d.fim}</p>
+        <img src="${d.foto}" width="100%">
+        <p>GPS: ${d.lat}, ${d.lng}</p>
+        <div id="qr"></div>
+    </div>
+    `;
+
+    div.style.display="block";
+
+    setTimeout(()=>{
+        document.getElementById("qr").innerHTML="";
+        new QRCode(document.getElementById("qr"),{
+            text:`${d.id}|${d.cliente}`,
+            width:100,
+            height:100
+        });
+
+        setTimeout(()=>{
+            html2pdf().from(document.getElementById("pdfContent")).save("relatorio.pdf");
+            div.style.display="none";
+        },1000);
+
+    },300);
+};
+
+// WHATSAPP
+document.getElementById("zap").onclick = ()=>{
+    const d = JSON.parse(localStorage.getItem("relatorio")||"null");
+    if(!d) return;
+
+    const msg = `Relatório ${d.cliente} - ${d.inicio}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`);
+};
+</script>
+
+</body>
+</html>
