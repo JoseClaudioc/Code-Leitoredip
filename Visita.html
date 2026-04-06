@@ -1,1 +1,442 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<title>Check-in PRO MASTER</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<style>
+body {
+    font-family: Arial;
+    background: #111;
+    color: #fff;
+    text-align: center;
+    padding: 15px;
+}
+
+input, textarea {
+    width: 90%;
+    padding: 10px;
+    margin: 5px;
+    border-radius: 8px;
+    border: none;
+}
+
+button {
+    width: 90%;
+    padding: 14px;
+    margin: 5px;
+    border-radius: 10px;
+    border: none;
+    font-size: 16px;
+}
+
+#start { background: green; }
+#end { background: red; }
+#pdf { background: blue; }
+#zap { background: #25D366; }
+
+.relatorio {
+    width: 800px;
+    background: #fff;
+    color: #000;
+    padding: 25px;
+    position: relative;
+}
+
+.topo {
+    display: flex;
+    justify-content: space-between;
+}
+
+.logo { width: 70px; }
+
+.linha {
+    height: 2px;
+    background: #000;
+    margin: 10px 0;
+}
+
+.grid {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.grid div {
+    flex: 1;
+    background: #f2f2f2;
+    padding: 8px;
+    border-radius: 6px;
+}
+
+.box {
+    background: #f2f2f2;
+    padding: 10px;
+    border-radius: 6px;
+    margin: 10px 0;
+}
+
+.fotos {
+    display: flex;
+    gap: 10px;
+}
+
+.fotos img {
+    width: 100%;
+    max-height: 250px;
+    object-fit: cover;
+}
+
+.validacao {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 15px;
+    text-align: center;
+}
+
+.assinatura {
+    margin-top: 30px;
+    text-align: center;
+}
+
+.carimbo {
+    position: absolute;
+    top: 40%;
+    left: 20%;
+    transform: rotate(-20deg);
+    font-size: 40px;
+    color: rgba(0,150,0,0.2);
+    border: 3px solid rgba(0,150,0,0.2);
+    padding: 10px;
+}
+
+.rodape {
+    margin-top: 20px;
+    font-size: 12px;
+    text-align: center;
+}
+</style>
+</head>
+
+<body>
+
+<h2>📍 Check-in PRO MASTER</h2>
+
+<input id="empresa" placeholder="Empresa">
+<input id="cliente" placeholder="Cliente">
+<input id="tecnico" placeholder="Técnico">
+<input id="video" placeholder="Link do vídeo">
+<input type="file" id="logoInput">
+
+<textarea id="obs" placeholder="Observações"></textarea>
+
+<button id="start">INICIAR</button>
+<button id="end">FINALIZAR</button>
+<button id="pdf">GERAR PDF</button>
+<button id="zap">ENVIAR WHATSAPP</button>
+
+<input type="file" id="camera" hidden accept="image/*" capture="camera">
+
+<div id="relatorio" style="display:none;"></div>
+
+<script>
+const App = { dados: {}, logoBase64: "" };
+
+// ELEMENTOS
+const start = document.getElementById("start");
+const end = document.getElementById("end");
+const pdf = document.getElementById("pdf");
+const zap = document.getElementById("zap");
+
+const empresa = document.getElementById("empresa");
+const cliente = document.getElementById("cliente");
+const tecnico = document.getElementById("tecnico");
+const video = document.getElementById("video");
+const obs = document.getElementById("obs");
+
+const logoInput = document.getElementById("logoInput");
+const camera = document.getElementById("camera");
+const relatorio = document.getElementById("relatorio");
+
+// SANITIZE
+function safe(text=""){
+    return text.replace(/[<>&"]/g, c => ({
+        '<':'&lt;',
+        '>':'&gt;',
+        '&':'&amp;',
+        '"':'&quot;'
+    }[c]));
+}
+
+// LOGO
+logoInput.onchange = e => {
+    const reader = new FileReader();
+    reader.onload = ev => App.logoBase64 = ev.target.result;
+    if (e.target.files[0]) reader.readAsDataURL(e.target.files[0]);
+};
+
+// GEO
+function getLocation() {
+    return new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(
+            pos => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+            () => reject("Ative a localização no celular")
+        );
+    });
+}
+
+// FOTO (corrigido)
+function tirarFoto() {
+    return new Promise(resolve => {
+        camera.value = "";
+        camera.click();
+
+        const handler = () => {
+            if (!camera.files[0]) return resolve("");
+
+            const reader = new FileReader();
+            reader.onload = e => resolve(e.target.result);
+            reader.readAsDataURL(camera.files[0]);
+        };
+
+        camera.addEventListener("change", handler, { once: true });
+    });
+}
+
+// STORAGE
+const storage = {
+    salvarVisita: d => localStorage.setItem("visita", JSON.stringify(d)),
+    obterVisita: () => JSON.parse(localStorage.getItem("visita") || "null"),
+    getHistorico: () => JSON.parse(localStorage.getItem("historico") || "[]"),
+    salvarHistorico: h => localStorage.setItem("historico", JSON.stringify(h))
+};
+
+// HASH
+function gerarHash(d){
+    let base = `${d.id}|${d.cliente}|${d.inicio}|${d.fim}|${d.lat}|${d.lng}`;
+    let hash = 0;
+    for(let i=0;i<base.length;i++){
+        hash = ((hash<<5)-hash)+base.charCodeAt(i);
+        hash |= 0;
+    }
+    return "CHK-"+Math.abs(hash);
+}
+
+// INICIAR
+start.onclick = async () => {
+    if (!empresa.value || !cliente.value || !tecnico.value) {
+        alert("Preencha tudo");
+        return;
+    }
+
+    try {
+        start.disabled = true;
+        start.innerText = "Processando...";
+
+        const loc = await getLocation();
+        const fotoInicio = await tirarFoto();
+
+        App.dados = {
+            id: "REL-" + Date.now(),
+            empresa: empresa.value,
+            cliente: cliente.value,
+            tecnico: tecnico.value,
+            video: video.value,
+            logo: App.logoBase64,
+            inicio: new Date().toLocaleString(),
+            lat: loc.lat,
+            lng: loc.lng,
+            foto_inicio: fotoInicio,
+            obs_inicio: obs.value
+        };
+
+        storage.salvarVisita(App.dados);
+        obs.value = "";
+
+        alert("Iniciado ✅");
+
+    } catch (e) {
+        alert(e);
+    } finally {
+        start.disabled = false;
+        start.innerText = "INICIAR";
+    }
+};
+
+// FINALIZAR (corrigido)
+end.onclick = async () => {
+    const d = storage.obterVisita();
+    if (!d) {
+        alert("Inicie primeiro");
+        return;
+    }
+
+    try {
+        end.disabled = true;
+        end.innerText = "Finalizando...";
+
+        const loc = await getLocation();
+        const fotoFim = await tirarFoto();
+
+        d.fim = new Date().toLocaleString();
+        d.foto_fim = fotoFim;
+        d.obs_fim = obs.value;
+
+        // ✅ CORREÇÃO DO GPS
+        d.lat = loc.lat;
+        d.lng = loc.lng;
+
+        const hist = storage.getHistorico();
+        hist.push(d);
+        storage.salvarHistorico(hist);
+
+        localStorage.removeItem("visita");
+
+        obs.value = "";
+
+        alert("Finalizado ✅");
+
+    } catch (e) {
+        alert(e);
+    } finally {
+        end.disabled = false;
+        end.innerText = "FINALIZAR";
+    }
+};
+
+// PDF (corrigido)
+pdf.onclick = () => {
+    const hist = storage.getHistorico();
+    if (hist.length === 0) {
+        alert("Sem relatório");
+        return;
+    }
+
+    const d = hist[hist.length - 1];
+    const hash = gerarHash(d);
+
+    const validacao = `
+ID:${d.id}
+Cliente:${d.cliente}
+Empresa:${d.empresa}
+Início:${d.inicio}
+Fim:${d.fim}
+GPS:https://maps.google.com/?q=${d.lat},${d.lng}
+HASH:${hash}
+`;
+
+    relatorio.innerHTML = `
+    <div class="relatorio" id="pdfContent">
+    <div class="topo">
+        <img class="logo" src="${d.logo || ''}">
+        <div>
+            <h2>${safe(d.empresa)}</h2>
+            <p>RELATÓRIO TÉCNICO</p>
+        </div>
+    </div>
+
+    <div class="linha"></div>
+
+    <div class="grid">
+        <div><b>ID:</b><br>${safe(d.id)}</div>
+        <div><b>Cliente:</b><br>${safe(d.cliente)}</div>
+        <div><b>Técnico:</b><br>${safe(d.tecnico)}</div>
+    </div>
+
+    <div class="grid">
+        <div><b>Início:</b><br>${safe(d.inicio)}</div>
+        <div><b>Fim:</b><br>${safe(d.fim)}</div>
+    </div>
+
+    <div class="box">${safe(d.obs_inicio)}<br>${safe(d.obs_fim)}</div>
+
+    <h3>Fotos</h3>
+    <div class="fotos">
+        <img src="${d.foto_inicio || ''}">
+        <img src="${d.foto_fim || ''}">
+    </div>
+
+    <h3>Validação</h3>
+    <div class="validacao">
+        <div id="qrVideo"></div>
+        <div id="qrAuth"></div>
+    </div>
+
+    <div class="box"><b>Hash:</b><br>${hash}</div>
+
+    <div class="assinatura">
+        ___________________________<br>
+        ${safe(d.tecnico)}
+    </div>
+
+    <div class="carimbo">SERVIÇO EXECUTADO</div>
+
+    <div class="rodape">
+    https://maps.google.com/?q=${d.lat},${d.lng}
+    </div>
+    </div>
+    `;
+
+    relatorio.style.display = "block";
+
+    setTimeout(() => {
+
+        // ✅ LIMPAR QR ANTIGO
+        document.getElementById("qrVideo").innerHTML = "";
+        document.getElementById("qrAuth").innerHTML = "";
+
+        new QRCode(document.getElementById("qrVideo"), {
+            text: safe(d.video) || "Sem vídeo",
+            width: 100,
+            height: 100
+        });
+
+        new QRCode(document.getElementById("qrAuth"), {
+            text: validacao,
+            width: 100,
+            height: 100
+        });
+
+        setTimeout(() => {
+            html2pdf()
+                .set({ html2canvas: { scale: 2 } })
+                .from(document.getElementById("pdfContent"))
+                .save(`relatorio_${d.cliente}.pdf`);
+
+            relatorio.style.display = "none";
+        }, 1500);
+
+    }, 500);
+};
+
+// WHATSAPP
+zap.onclick = () => {
+    const hist = storage.getHistorico();
+    if (hist.length === 0) {
+        alert("Sem relatório");
+        return;
+    }
+
+    const d = hist[hist.length - 1];
+
+    const msg = `
+📋 Relatório Técnico
+ID: ${d.id}
+Cliente: ${d.cliente}
+Empresa: ${d.empresa}
+Início: ${d.inicio}
+Fim: ${d.fim}
+📍 https://maps.google.com/?q=${d.lat},${d.lng}
+    `;
+
+    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`);
+};
+</script>
+
+</body>
+</html>
