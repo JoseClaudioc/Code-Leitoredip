@@ -2,99 +2,99 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Gerador Profissional de Documentos</title>
+< title > Gerador Profissional de Documentos </ title >
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+< script  src = " https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js " > </script>
+< script  src = " https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js " > </script>
 
-<style>
+< estilo >
 
-body{
-  font-family:Arial;
-  background:#0b3d91;
-  padding:20px;
+corpo {
+  família-da-fonte : Arial ;
+  fundo : #0b3d91;
+  preenchimento : 20 px ;
 }
 
-.container{
-  background:#1e5ed6;
-  padding:25px;
-  max-width:1100px;
-  margin:auto;
-  border-radius:10px;
-  box-shadow:0 0 15px rgba(0,0,0,0.2);
-  color:white;
+. contêiner {
+  fundo : #1e5ed6;
+  preenchimento : 25 px ;
+  largura máxima : 1100 px ;
+  margem : automática ;
+  raio da borda : 10 px ;
+  box-shadow : 0  0  15 px  rgba ( 0 , 0 , 0 , 0.2 ) ;
+  cor : branca ;
 }
 
-input,textarea,select{
-  width:100%;
-  padding:10px;
-  margin:6px 0;
-  border-radius:6px;
-  border:1px solid #ccc;
-  box-sizing:border-box;
-  background:white;
-  color:black;
+entrada , área de texto , seleção {
+  largura : 100 % ;
+  preenchimento : 10 px ;
+  margem : 6 px  0 ;
+  raio-da-borda : 6 px ;
+  borda : 1 px  sólida #ccc;
+  box-sizing : border-box ;
+  fundo : branco ;
+  cor : preto ;
 }
 
-button{
-  background:#0a58ca;
-  color:white;
-  padding:12px;
-  border:none;
-  border-radius:6px;
-  cursor:pointer;
+botão {
+  fundo : #0a58ca;
+  cor : branca ;
+  preenchimento : 12 px ;
+  borda : nenhuma ;
+  raio-da-borda : 6 px ;
+  cursor : ponteiro ;
 }
 
-button:hover{
-  background:#084298;
+botão : passar o mouse {
+  fundo : #084298;
 }
 
-table{
-  width:100%;
-  border-collapse:collapse;
-  margin-top:15px;
-  page-break-inside:auto;
+mesa {
+  largura : 100 % ;
+  colapso de fronteira : colapso ;
+  margem superior : 15 px ;
+  quebra-de-página-interna : automática ;
 }
 
-tr{
-  page-break-inside:avoid;
+tr {
+  quebra-de-página-interna : evitar ;
 }
 
-td,th{
-  border:1px solid #ddd;
-  padding:8px;
+td , th {
+  borda : 1 px  sólida #ddd;
+  preenchimento : 8 px ;
 }
 
-th{
-  background:#0a58ca;
-  color:white;
+th {
+  fundo : #0a58ca;
+  cor : branca ;
 }
 
-.removeBtn{
-  background:red;
-  color:white;
+. removerBtn {
+  fundo : vermelho ;
+  cor : branca ;
 }
 
-.total{
-  font-size:24px;
-  font-weight:bold;
+. total {
+  tamanho da fonte : 24 px ;
+  peso da fonte : negrito ;
 }
 
-.statusBox{
+
   font-weight:bold;
   padding:8px;
   border-radius:6px;
   text-align:center;
   color:white;
-}
 
-.status-pendente{ background:orange; }
-.status-aprovado{ background:green; }
-.status-rejeitado{ background:red; }
+
+
+
+
 
 /* ===== PDF CORRIGIDO ===== */
 
-#pdf{
+
   width:190mm; /* largura ajustada para evitar corte */
   min-height:297mm;
   padding:10mm;
@@ -212,6 +212,7 @@ width:300px;
 <option>Relatório</option>
 <option>Recibo</option>
 <option>Laudos</option>
+<option>visita Técnica</option>
 </select>
 
 <h3>Status</h3>
