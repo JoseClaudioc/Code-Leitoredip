@@ -15,31 +15,51 @@
     content="LinkPro — crie e publique seu cartão digital."
   >
 
+  <meta
+    name="theme-color"
+    content="#2563eb"
+  >
+
   <title>LinkPro — Seu cartão digital</title>
 
-  <link rel="stylesheet" href="style.css">
+  <link
+    rel="stylesheet"
+    href="style.css"
+  >
 
 </head>
+
 
 <body>
 
 <div class="app">
 
-  <!-- ==========================================
+
+  <!-- =====================================================
        SIDEBAR
-  =========================================== -->
+  ====================================================== -->
 
   <aside class="sidebar">
 
     <div class="brand">
 
-      <div class="brand-icon">
+      <div
+        class="brand-icon"
+        aria-hidden="true"
+      >
         🔗
       </div>
 
       <div>
-        <strong>LinkPro</strong>
-        <span>Cartão digital</span>
+
+        <strong>
+          LinkPro
+        </strong>
+
+        <span>
+          Cartão digital
+        </span>
+
       </div>
 
     </div>
@@ -55,6 +75,7 @@
         👤 Perfil
       </button>
 
+
       <button
         class="nav-item"
         type="button"
@@ -63,6 +84,7 @@
         🔗 Meus links
       </button>
 
+
       <button
         class="nav-item"
         type="button"
@@ -70,6 +92,7 @@
       >
         🎨 Aparência
       </button>
+
 
       <button
         class="nav-item"
@@ -92,6 +115,7 @@
         💾 Salvar
       </button>
 
+
       <button
         class="reset-btn"
         id="resetBtn"
@@ -105,11 +129,14 @@
   </aside>
 
 
-  <!-- ==========================================
+  <!-- =====================================================
        CONTEÚDO PRINCIPAL
-  =========================================== -->
+  ====================================================== -->
 
   <main class="content">
+
+
+    <!-- TOPBAR -->
 
     <header class="topbar">
 
@@ -141,9 +168,9 @@
     </header>
 
 
-    <!-- ========================================
+    <!-- ===================================================
          PERFIL
-    ========================================= -->
+    ==================================================== -->
 
     <section
       class="editor-section active"
@@ -169,6 +196,8 @@
         </div>
 
 
+        <!-- FOTO -->
+
         <div class="avatar-editor">
 
           <div
@@ -186,19 +215,22 @@
             </strong>
 
             <p>
-              Você pode adicionar uma foto abaixo.
+              Escolha uma imagem para representar seu perfil.
             </p>
 
             <input
               type="file"
               id="avatarInput"
               accept="image/*"
+              aria-label="Selecionar foto do perfil"
             >
 
           </div>
 
         </div>
 
+
+        <!-- NOME / PROFISSÃO -->
 
         <div class="form-grid">
 
@@ -237,6 +269,8 @@
         </div>
 
 
+        <!-- BIO -->
+
         <div class="form-group">
 
           <label for="profileBio">
@@ -257,9 +291,9 @@
     </section>
 
 
-    <!-- ========================================
+    <!-- ===================================================
          LINKS
-    ========================================= -->
+    ==================================================== -->
 
     <section
       class="editor-section"
@@ -297,9 +331,9 @@
     </section>
 
 
-    <!-- ========================================
+    <!-- ===================================================
          APARÊNCIA
-    ========================================= -->
+    ==================================================== -->
 
     <section
       class="editor-section"
@@ -325,15 +359,26 @@
         </div>
 
 
-        <div class="theme-grid">
+        <!-- TEMAS -->
+
+        <div
+          class="theme-grid"
+          aria-label="Temas disponíveis"
+        >
 
           <button
-            class="theme-card"
+            class="theme-card active"
             type="button"
             data-theme="blue"
           >
-            <span style="background:#2563eb"></span>
+
+            <span
+              style="background:#2563eb"
+              aria-hidden="true"
+            ></span>
+
             Azul
+
           </button>
 
 
@@ -342,8 +387,14 @@
             type="button"
             data-theme="purple"
           >
-            <span style="background:#7c3aed"></span>
+
+            <span
+              style="background:#7c3aed"
+              aria-hidden="true"
+            ></span>
+
             Roxo
+
           </button>
 
 
@@ -352,8 +403,14 @@
             type="button"
             data-theme="green"
           >
-            <span style="background:#059669"></span>
+
+            <span
+              style="background:#059669"
+              aria-hidden="true"
+            ></span>
+
             Verde
+
           </button>
 
 
@@ -362,8 +419,14 @@
             type="button"
             data-theme="orange"
           >
-            <span style="background:#ea580c"></span>
+
+            <span
+              style="background:#ea580c"
+              aria-hidden="true"
+            ></span>
+
             Laranja
+
           </button>
 
 
@@ -372,12 +435,20 @@
             type="button"
             data-theme="black"
           >
-            <span style="background:#111827"></span>
+
+            <span
+              style="background:#111827"
+              aria-hidden="true"
+            ></span>
+
             Preto
+
           </button>
 
         </div>
 
+
+        <!-- CORES PERSONALIZADAS -->
 
         <div class="custom-colors">
 
@@ -391,6 +462,7 @@
               type="color"
               id="buttonColor"
               value="#2563eb"
+              aria-label="Escolher cor dos botões"
             >
 
           </div>
@@ -406,6 +478,7 @@
               type="color"
               id="backgroundColor"
               value="#f8fafc"
+              aria-label="Escolher cor de fundo"
             >
 
           </div>
@@ -417,9 +490,9 @@
     </section>
 
 
-    <!-- ========================================
+    <!-- ===================================================
          PUBLICAR
-    ========================================= -->
+    ==================================================== -->
 
     <section
       class="editor-section"
@@ -428,7 +501,10 @@
 
       <div class="card publish-card">
 
-        <div class="publish-icon">
+        <div
+          class="publish-icon"
+          aria-hidden="true"
+        >
           🚀
         </div>
 
@@ -502,7 +578,7 @@
             </strong>
 
             <span>
-              IndexedDB
+              Armazenamento local
             </span>
 
           </div>
@@ -516,9 +592,9 @@
   </main>
 
 
-  <!-- ==========================================
+  <!-- =====================================================
        PRÉ-VISUALIZAÇÃO
-  =========================================== -->
+  ====================================================== -->
 
   <aside class="preview-area">
 
@@ -534,6 +610,8 @@
         id="phoneScreen"
       >
 
+        <!-- AVATAR -->
+
         <div
           class="profile-avatar"
           id="previewAvatar"
@@ -542,10 +620,14 @@
         </div>
 
 
+        <!-- NOME -->
+
         <h2 id="previewName">
           Seu Nome
         </h2>
 
+
+        <!-- PROFISSÃO -->
 
         <div
           class="preview-job"
@@ -555,6 +637,8 @@
         </div>
 
 
+        <!-- BIO -->
+
         <p
           class="preview-bio"
           id="previewBio"
@@ -563,8 +647,12 @@
         </p>
 
 
+        <!-- LINKS -->
+
         <div id="previewLinks"></div>
 
+
+        <!-- MARCA -->
 
         <div class="preview-brand">
           Criado com LinkPro
@@ -579,9 +667,9 @@
 </div>
 
 
-<!-- ==========================================
+<!-- =======================================================
      MODAL DE CÓDIGO
-=========================================== -->
+======================================================== -->
 
 <div
   class="modal"
@@ -593,11 +681,12 @@
 
   <div class="modal-box">
 
+
     <button
       class="modal-close"
       id="closeModal"
       type="button"
-      aria-label="Fechar"
+      aria-label="Fechar janela"
     >
       ×
     </button>
@@ -640,9 +729,9 @@
 </div>
 
 
-<!-- ==========================================
+<!-- =======================================================
      NOTIFICAÇÃO
-=========================================== -->
+======================================================== -->
 
 <div
   class="toast"
@@ -654,11 +743,14 @@
 </div>
 
 
-<!-- ==========================================
+<!-- =======================================================
      JAVASCRIPT
-=========================================== -->
+======================================================== -->
 
-<script src="script.js"></script>
+<script
+  src="script.js"
+></script>
+
 
 </body>
 
