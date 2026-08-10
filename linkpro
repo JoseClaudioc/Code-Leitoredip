@@ -1,1 +1,386 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LinkPro — Seu cartão digital</title>
+  <link rel="stylesheet" href="style.css">
+</head>
 
+<body>
+
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+
+    <div class="brand">
+      <div class="brand-icon">🔗</div>
+      <div>
+        <strong>LinkPro</strong>
+        <span>Cartão digital</span>
+      </div>
+    </div>
+
+    <nav>
+      <button class="nav-item active" data-section="perfil">
+        👤 Perfil
+      </button>
+
+      <button class="nav-item" data-section="links">
+        🔗 Meus links
+      </button>
+
+      <button class="nav-item" data-section="aparencia">
+        🎨 Aparência
+      </button>
+
+      <button class="nav-item" data-section="publicar">
+        🚀 Publicar
+      </button>
+    </nav>
+
+    <div class="sidebar-bottom">
+      <button class="save-btn" id="saveBtn">
+        💾 Salvar
+      </button>
+
+      <button class="reset-btn" id="resetBtn">
+        ↻ Restaurar
+      </button>
+    </div>
+
+  </aside>
+
+
+  <!-- CONTEÚDO -->
+  <main class="content">
+
+    <header class="topbar">
+
+      <div>
+        <h1 id="sectionTitle">Meu perfil</h1>
+        <p id="sectionDescription">
+          Configure as informações do seu cartão digital.
+        </p>
+      </div>
+
+      <div class="status">
+        <span></span>
+        Salvo localmente
+      </div>
+
+    </header>
+
+
+    <!-- PERFIL -->
+    <section class="editor-section active" id="perfil">
+
+      <div class="card">
+
+        <div class="card-title">
+          <div>
+            <h2>Informações do perfil</h2>
+            <p>Essas informações aparecem na sua página.</p>
+          </div>
+        </div>
+
+        <div class="avatar-editor">
+
+          <div class="big-avatar" id="editorAvatar">
+            ?
+          </div>
+
+          <div>
+            <strong>Foto do perfil</strong>
+            <p>Você pode adicionar uma foto abaixo.</p>
+
+            <input
+              type="file"
+              id="avatarInput"
+              accept="image/*"
+            >
+          </div>
+
+        </div>
+
+        <div class="form-grid">
+
+          <div class="form-group">
+            <label>Nome profissional</label>
+            <input
+              id="profileName"
+              type="text"
+              placeholder="Ex: João Silva"
+            >
+          </div>
+
+          <div class="form-group">
+            <label>Profissão</label>
+            <input
+              id="profileJob"
+              type="text"
+              placeholder="Ex: Fotógrafo"
+            >
+          </div>
+
+        </div>
+
+        <div class="form-group">
+          <label>Descrição</label>
+
+          <textarea
+            id="profileBio"
+            placeholder="Conte um pouco sobre você..."
+            rows="4"
+          ></textarea>
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- LINKS -->
+    <section class="editor-section" id="links">
+
+      <div class="section-heading">
+
+        <div>
+          <h2>Meus links</h2>
+          <p>Adicione os lugares onde seus clientes podem encontrar você.</p>
+        </div>
+
+        <button class="primary-btn" id="addLinkBtn">
+          + Adicionar link
+        </button>
+
+      </div>
+
+      <div id="linksContainer"></div>
+
+    </section>
+
+
+    <!-- APARÊNCIA -->
+    <section class="editor-section" id="aparencia">
+
+      <div class="card">
+
+        <div class="card-title">
+          <div>
+            <h2>Personalização</h2>
+            <p>Deixe seu cartão com a sua identidade.</p>
+          </div>
+        </div>
+
+        <div class="theme-grid">
+
+          <button
+            class="theme-card"
+            data-theme="blue"
+          >
+            <span style="background:#2563eb"></span>
+            Azul
+          </button>
+
+          <button
+            class="theme-card"
+            data-theme="purple"
+          >
+            <span style="background:#7c3aed"></span>
+            Roxo
+          </button>
+
+          <button
+            class="theme-card"
+            data-theme="green"
+          >
+            <span style="background:#059669"></span>
+            Verde
+          </button>
+
+          <button
+            class="theme-card"
+            data-theme="orange"
+          >
+            <span style="background:#ea580c"></span>
+            Laranja
+          </button>
+
+          <button
+            class="theme-card"
+            data-theme="black"
+          >
+            <span style="background:#111827"></span>
+            Preto
+          </button>
+
+        </div>
+
+        <div class="custom-colors">
+
+          <div>
+            <label>Cor dos botões</label>
+            <input type="color" id="buttonColor">
+          </div>
+
+          <div>
+            <label>Cor de fundo</label>
+            <input type="color" id="backgroundColor">
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- PUBLICAR -->
+    <section class="editor-section" id="publicar">
+
+      <div class="card publish-card">
+
+        <div class="publish-icon">
+          🚀
+        </div>
+
+        <h2>Seu cartão está pronto!</h2>
+
+        <p>
+          Gere uma página HTML independente para publicar
+          no GitHub Pages ou em qualquer hospedagem.
+        </p>
+
+        <div class="publish-actions">
+
+          <button
+            class="primary-btn"
+            id="generatePageBtn"
+          >
+            📄 Gerar página HTML
+          </button>
+
+          <button
+            class="secondary-btn"
+            id="generateButtonBtn"
+          >
+            🔗 Gerar botão
+          </button>
+
+        </div>
+
+        <div class="publish-info">
+
+          <div>
+            <strong>GitHub Pages</strong>
+            <span>Compatível</span>
+          </div>
+
+          <div>
+            <strong>Banco de dados</strong>
+            <span>Não necessário</span>
+          </div>
+
+          <div>
+            <strong>Servidor</strong>
+            <span>Não necessário</span>
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+
+  <!-- PREVIEW -->
+  <aside class="preview-area">
+
+    <div class="preview-label">
+      PRÉ-VISUALIZAÇÃO
+    </div>
+
+    <div class="phone">
+
+      <div class="phone-screen" id="phoneScreen">
+
+        <div class="profile-avatar" id="previewAvatar">
+          ?
+        </div>
+
+        <h2 id="previewName">
+          Seu Nome
+        </h2>
+
+        <div
+          class="preview-job"
+          id="previewJob"
+        >
+          Sua profissão
+        </div>
+
+        <p
+          class="preview-bio"
+          id="previewBio"
+        >
+          Sua descrição aparecerá aqui.
+        </p>
+
+        <div id="previewLinks"></div>
+
+        <div class="preview-brand">
+          Criado com LinkPro
+        </div>
+
+      </div>
+
+    </div>
+
+  </aside>
+
+</div>
+
+
+<!-- MODAL -->
+<div class="modal" id="modal">
+
+  <div class="modal-box">
+
+    <button class="modal-close" id="closeModal">
+      ×
+    </button>
+
+    <h2 id="modalTitle">
+      Código gerado
+    </h2>
+
+    <p id="modalDescription"></p>
+
+    <textarea id="generatedCode" readonly></textarea>
+
+    <button class="primary-btn full" id="copyCodeBtn">
+      📋 Copiar código
+    </button>
+
+    <button class="secondary-btn full" id="downloadBtn">
+      📥 Baixar arquivo
+    </button>
+
+  </div>
+
+</div>
+
+
+<div class="toast" id="toast">
+  Salvo com sucesso!
+</div>
+
+
+<script src="script.js"></script>
+
+</body>
+</html>
