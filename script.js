@@ -1,939 +1,1413 @@
-document.addEventListener("DOMContentLoaded", () => {
+/* =========================================================
+   LINKPRO V2 — STYLE.CSS
+========================================================= */
 
-  const profileName = document.getElementById("profileName");
-  const profileJob = document.getElementById("profileJob");
-  const profileBio = document.getElementById("profileBio");
+:root {
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
 
-  const previewName = document.getElementById("previewName");
-  const previewJob = document.getElementById("previewJob");
-  const previewBio = document.getElementById("previewBio");
+  --background: #f1f5f9;
+  --surface: #ffffff;
 
-  const linksContainer = document.getElementById("linksContainer");
-  const previewLinks = document.getElementById("previewLinks");
+  --text: #0f172a;
+  --text-secondary: #64748b;
+  --text-muted: #94a3b8;
 
-  const addLinkBtn = document.getElementById("addLinkBtn");
-  const saveBtn = document.getElementById("saveBtn");
-  const resetBtn = document.getElementById("resetBtn");
+  --border: #e2e8f0;
 
-  const avatarInput = document.getElementById("avatarInput");
-  const editorAvatar = document.getElementById("editorAvatar");
-  const previewAvatar = document.getElementById("previewAvatar");
+  --sidebar: #0f172a;
+  --sidebar-hover: #1e293b;
 
-  const buttonColor = document.getElementById("buttonColor");
-  const backgroundColor = document.getElementById("backgroundColor");
+  --success: #22c55e;
+  --warning: #f59e0b;
 
-  const generatePageBtn = document.getElementById("generatePageBtn");
-  const generateButtonBtn = document.getElementById("generateButtonBtn");
+  --radius: 10px;
+}
 
-  const modal = document.getElementById("modal");
-  const closeModal = document.getElementById("closeModal");
-  const modalTitle = document.getElementById("modalTitle");
-  const modalDescription = document.getElementById("modalDescription");
-  const generatedCode = document.getElementById("generatedCode");
-  const copyCodeBtn = document.getElementById("copyCodeBtn");
-  const downloadBtn = document.getElementById("downloadBtn");
 
-  const toast = document.getElementById("toast");
+/* =========================================================
+   RESET
+========================================================= */
 
-  let links = [];
-  let avatarData = "";
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
 
-  let settings = {
-    theme: "blue",
-    buttonColor: "#2563eb",
-    backgroundColor: "#f8fafc"
-  };
 
-  const themes = {
-    blue: {
-      button: "#2563eb",
-      background: "#f8fafc"
-    },
+html {
+  scroll-behavior: smooth;
+}
 
-    purple: {
-      button: "#7c3aed",
-      background: "#faf5ff"
-    },
 
-    green: {
-      button: "#059669",
-      background: "#ecfdf5"
-    },
+body {
+  font-family: Arial, sans-serif;
+  background: var(--background);
+  color: var(--text);
+}
 
-    orange: {
-      button: "#ea580c",
-      background: "#fff7ed"
-    },
 
-    black: {
-      button: "#111827",
-      background: "#f3f4f6"
-    }
-  };
+button,
+input,
+textarea {
+  font: inherit;
+}
 
-  /* NAVEGAÇÃO */
 
-  const navItems = document.querySelectorAll(".nav-item");
-  const sections = document.querySelectorAll(".editor-section");
+button {
+  cursor: pointer;
+}
 
-  const sectionTitles = {
-    perfil: {
-      title: "Meu perfil",
-      description: "Configure as informações do seu cartão digital."
-    },
 
-    links: {
-      title: "Meus links",
-      description: "Adicione os links que deseja divulgar."
-    },
+/* =========================================================
+   APP
+========================================================= */
 
-    aparencia: {
-      title: "Aparência",
-      description: "Personalize as cores do seu cartão."
-    },
+.app {
+  min-height: 100vh;
 
-    publicar: {
-      title: "Publicar",
-      description: "Gere sua página pronta para divulgação."
-    }
-  };
+  display: grid;
 
-  navItems.forEach(item => {
+  grid-template-columns:
+    240px
+    minmax(0, 1fr)
+    360px;
+}
 
-    item.addEventListener("click", () => {
 
-      const section = item.dataset.section;
+/* =========================================================
+   SIDEBAR
+========================================================= */
 
-      navItems.forEach(nav => {
-        nav.classList.remove("active");
-      });
+.sidebar {
+  background: var(--sidebar);
+  color: white;
 
-      sections.forEach(sec => {
-        sec.classList.remove("active");
-      });
+  padding: 24px 16px;
 
-      item.classList.add("active");
+  display: flex;
+  flex-direction: column;
 
-      const target = document.getElementById(section);
+  min-height: 100vh;
+}
 
-      if (target) {
-        target.classList.add("active");
-      }
 
-      const title = document.getElementById("sectionTitle");
-      const description = document.getElementById("sectionDescription");
+.brand {
+  display: flex;
+  align-items: center;
 
-      if (sectionTitles[section]) {
-        title.textContent = sectionTitles[section].title;
-        description.textContent = sectionTitles[section].description;
-      }
+  gap: 12px;
 
-    });
+  padding: 8px;
 
-  });
+  margin-bottom: 35px;
+}
 
-  /* PERFIL */
 
-  function updateProfile() {
+.brand-icon {
+  width: 42px;
+  height: 42px;
 
-    previewName.textContent =
-      profileName.value.trim() || "Seu Nome";
+  border-radius: 12px;
 
-    previewJob.textContent =
-      profileJob.value.trim() || "Sua profissão";
+  background: var(--primary);
 
-    previewBio.textContent =
-      profileBio.value.trim() ||
-      "Sua descrição aparecerá aqui.";
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
+  font-size: 21px;
+
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+
+.brand-icon:hover {
+  transform: translateY(-1px);
+}
+
+
+.brand strong {
+  display: block;
+
+  font-size: 18px;
+}
+
+
+.brand span {
+  display: block;
+
+  margin-top: 3px;
+
+  font-size: 12px;
+
+  color: #94a3b8;
+}
+
+
+/* =========================================================
+   NAVEGAÇÃO
+========================================================= */
+
+nav {
+  display: flex;
+  flex-direction: column;
+
+  gap: 7px;
+}
+
+
+.nav-item {
+  width: 100%;
+
+  border: 0;
+
+  background: transparent;
+
+  color: #cbd5e1;
+
+  text-align: left;
+
+  padding: 13px 14px;
+
+  border-radius: 9px;
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    transform 0.15s ease;
+}
+
+
+.nav-item:hover {
+  background: var(--sidebar-hover);
+
+  color: white;
+}
+
+
+.nav-item:active {
+  transform: scale(0.98);
+}
+
+
+.nav-item.active {
+  background: var(--sidebar-hover);
+
+  color: white;
+
+  box-shadow:
+    inset 3px 0 0 var(--primary);
+}
+
+
+/* =========================================================
+   BOTÕES DA SIDEBAR
+========================================================= */
+
+.sidebar-bottom {
+  margin-top: auto;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 8px;
+}
+
+
+.save-btn,
+.reset-btn {
+  border: 0;
+
+  padding: 12px;
+
+  border-radius: 9px;
+
+  transition:
+    background 0.2s ease,
+    transform 0.15s ease;
+}
+
+
+.save-btn {
+  background: var(--primary);
+
+  color: white;
+
+  font-weight: bold;
+}
+
+
+.save-btn:hover {
+  background: var(--primary-hover);
+}
+
+
+.save-btn:active,
+.reset-btn:active {
+  transform: scale(0.98);
+}
+
+
+.reset-btn {
+  background: #1e293b;
+
+  color: #cbd5e1;
+}
+
+
+.reset-btn:hover {
+  background: #334155;
+
+  color: white;
+}
+
+
+/* =========================================================
+   CONTEÚDO
+========================================================= */
+
+.content {
+  padding: 30px;
+
+  overflow-y: auto;
+
+  max-height: 100vh;
+}
+
+
+.topbar {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  gap: 20px;
+
+  margin-bottom: 25px;
+}
+
+
+.topbar h1 {
+  font-size: 28px;
+
+  margin-bottom: 5px;
+}
+
+
+.topbar p {
+  color: var(--text-secondary);
+}
+
+
+/* =========================================================
+   STATUS
+========================================================= */
+
+.status {
+  color: var(--text-secondary);
+
+  font-size: 13px;
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 7px;
+
+  white-space: nowrap;
+}
+
+
+.status span {
+  width: 8px;
+  height: 8px;
+
+  background: var(--success);
+
+  border-radius: 50%;
+
+  flex-shrink: 0;
+
+  transition:
+    background 0.2s ease;
+}
+
+
+/* =========================================================
+   SEÇÕES
+========================================================= */
+
+.editor-section {
+  display: none;
+
+  animation: sectionIn 0.18s ease;
+}
+
+
+.editor-section.active {
+  display: block;
+}
+
+
+@keyframes sectionIn {
+
+  from {
+    opacity: 0;
+
+    transform: translateY(4px);
   }
 
-  profileName.addEventListener("input", updateProfile);
-  profileJob.addEventListener("input", updateProfile);
-  profileBio.addEventListener("input", updateProfile);
+  to {
+    opacity: 1;
 
-  /* ADICIONAR LINK */
-
-  addLinkBtn.addEventListener("click", () => {
-
-    const newLink = {
-      id: Date.now(),
-      title: "Meu link",
-      url: "https://",
-      color: settings.buttonColor
-    };
-
-    links.push(newLink);
-
-    renderLinks();
-
-    showToast("Link adicionado!");
-
-  });
-
-  /* RENDERIZAR LINKS */
-
-  function renderLinks() {
-
-    linksContainer.innerHTML = "";
-    previewLinks.innerHTML = "";
-
-    links.forEach(link => {
-
-      const card = document.createElement("div");
-
-      card.className = "card";
-      card.style.marginBottom = "16px";
-
-      card.innerHTML = `
-        <div class="form-group">
-          <label>Nome do botão</label>
-
-          <input
-            type="text"
-            class="link-title"
-            value="${escapeHtml(link.title)}"
-            placeholder="Ex: Meu Instagram"
-          >
-        </div>
-
-        <div class="form-group">
-          <label>Link de destino</label>
-
-          <input
-            type="url"
-            class="link-url"
-            value="${escapeHtml(link.url)}"
-            placeholder="https://seu-link.com"
-          >
-        </div>
-
-        <div style="
-          display:flex;
-          gap:10px;
-          margin-top:10px;
-        ">
-
-          <button
-            class="primary-btn save-link"
-            type="button"
-          >
-            ✓ Atualizar
-          </button>
-
-          <button
-            class="secondary-btn delete-link"
-            type="button"
-          >
-            🗑 Excluir
-          </button>
-
-        </div>
-      `;
-
-      const titleInput = card.querySelector(".link-title");
-      const urlInput = card.querySelector(".link-url");
-      const saveLink = card.querySelector(".save-link");
-      const deleteLink = card.querySelector(".delete-link");
-
-      saveLink.addEventListener("click", () => {
-
-        link.title =
-          titleInput.value.trim() || "Meu link";
-
-        link.url =
-          urlInput.value.trim() || "https://";
-
-        link.color = settings.buttonColor;
-
-        renderLinks();
-
-        showToast("Link atualizado!");
-
-      });
-
-      deleteLink.addEventListener("click", () => {
-
-        links = links.filter(item => item.id !== link.id);
-
-        renderLinks();
-
-        showToast("Link excluído!");
-
-      });
-
-      linksContainer.appendChild(card);
-
-      const previewButton = document.createElement("a");
-
-      previewButton.href = normalizeUrl(link.url);
-      previewButton.target = "_blank";
-      previewButton.rel = "noopener noreferrer";
-
-      previewButton.textContent =
-        link.title || "Meu link";
-
-      previewButton.style.display = "block";
-      previewButton.style.padding = "14px 20px";
-      previewButton.style.marginBottom = "12px";
-      previewButton.style.background =
-        link.color || settings.buttonColor;
-
-      previewButton.style.color = "#fff";
-      previewButton.style.textDecoration = "none";
-      previewButton.style.borderRadius = "10px";
-      previewButton.style.fontFamily = "Arial, sans-serif";
-      previewButton.style.fontWeight = "bold";
-      previewButton.style.textAlign = "center";
-
-      previewLinks.appendChild(previewButton);
-
-    });
-
+    transform: translateY(0);
   }
 
-  /* CORES */
+}
 
-  document.querySelectorAll(".theme-card").forEach(button => {
 
-    button.addEventListener("click", () => {
+/* =========================================================
+   CARDS
+========================================================= */
 
-      const theme = button.dataset.theme;
+.card {
+  background: var(--surface);
 
-      if (!themes[theme]) {
-        return;
-      }
+  border: 1px solid var(--border);
 
-      settings.theme = theme;
-      settings.buttonColor = themes[theme].button;
-      settings.backgroundColor = themes[theme].background;
+  border-radius: 15px;
 
-      buttonColor.value = settings.buttonColor;
-      backgroundColor.value = settings.backgroundColor;
+  padding: 24px;
 
-      applyColors();
-      renderLinks();
+  margin-bottom: 18px;
 
-    });
+  box-shadow:
+    0 5px 20px rgba(15, 23, 42, 0.04);
 
-  });
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
 
-  buttonColor.addEventListener("input", () => {
 
-    settings.buttonColor = buttonColor.value;
+.card:hover {
+  border-color: #d7dee8;
+}
 
-    applyColors();
-    renderLinks();
 
-  });
+.card-title {
+  margin-bottom: 24px;
+}
 
-  backgroundColor.addEventListener("input", () => {
 
-    settings.backgroundColor =
-      backgroundColor.value;
+.card-title h2,
+.section-heading h2 {
+  font-size: 21px;
 
-    applyColors();
+  margin-bottom: 6px;
+}
 
-  });
 
-  function applyColors() {
+.card-title p,
+.section-heading p {
+  color: var(--text-secondary);
 
-    const phoneScreen =
-      document.getElementById("phoneScreen");
+  font-size: 14px;
+}
 
-    if (phoneScreen) {
-      phoneScreen.style.background =
-        settings.backgroundColor;
-    }
 
-  }
+/* =========================================================
+   FORMULÁRIOS
+========================================================= */
 
-  /* FOTO */
+.form-grid {
+  display: grid;
 
-  avatarInput.addEventListener("change", event => {
+  grid-template-columns:
+    1fr
+    1fr;
 
-    const file = event.target.files[0];
+  gap: 18px;
+}
 
-    if (!file) {
-      return;
-    }
 
-    const reader = new FileReader();
+.form-group {
+  margin-bottom: 18px;
+}
 
-    reader.onload = function(e) {
 
-      avatarData = e.target.result;
+.form-group label,
+.custom-colors label {
+  display: block;
 
-      editorAvatar.innerHTML = `
-        <img
-          src="${avatarData}"
-          style="
-            width:100%;
-            height:100%;
-            object-fit:cover;
-            border-radius:50%;
-          "
-        >
-      `;
+  font-size: 13px;
 
-      previewAvatar.innerHTML = `
-        <img
-          src="${avatarData}"
-          style="
-            width:100%;
-            height:100%;
-            object-fit:cover;
-            border-radius:50%;
-          "
-        >
-      `;
+  font-weight: bold;
 
-    };
+  margin-bottom: 7px;
 
-    reader.readAsDataURL(file);
+  color: #334155;
+}
 
-  });
 
-  /* SALVAR */
+.form-group input,
+.form-group textarea {
+  width: 100%;
 
-  saveBtn.addEventListener("click", saveData);
+  border: 1px solid #cbd5e1;
 
-  function saveData() {
+  border-radius: 9px;
 
-    const data = {
+  padding: 12px;
 
-      profile: {
-        name: profileName.value,
-        job: profileJob.value,
-        bio: profileBio.value
-      },
+  outline: none;
 
-      links: links,
+  background: white;
 
-      avatar: avatarData,
+  color: var(--text);
 
-      settings: settings
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
 
-    };
 
-    localStorage.setItem(
-      "linkpro_data",
-      JSON.stringify(data)
+.form-group input:hover,
+.form-group textarea:hover {
+  border-color: #94a3b8;
+}
+
+
+.form-group input:focus,
+.form-group textarea:focus {
+  border-color: var(--primary);
+
+  box-shadow:
+    0 0 0 3px
+    color-mix(
+      in srgb,
+      var(--primary) 12%,
+      transparent
     );
+}
 
-    showToast("Salvo com sucesso!");
 
-  }
+.form-group textarea {
+  resize: vertical;
 
-  /* CARREGAR */
+  min-height: 100px;
+}
 
-  function loadData() {
 
-    const saved =
-      localStorage.getItem("linkpro_data");
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+  color: #94a3b8;
+}
 
-    if (!saved) {
 
-      buttonColor.value =
-        settings.buttonColor;
+/* =========================================================
+   AVATAR
+========================================================= */
 
-      backgroundColor.value =
-        settings.backgroundColor;
+.avatar-editor {
+  display: flex;
 
-      updateProfile();
-      applyColors();
-      renderLinks();
+  align-items: center;
 
-      return;
-    }
+  gap: 18px;
 
-    try {
+  margin-bottom: 25px;
+}
 
-      const data = JSON.parse(saved);
 
-      if (data.profile) {
+.big-avatar {
+  width: 80px;
+  height: 80px;
 
-        profileName.value =
-          data.profile.name || "";
+  border-radius: 50%;
 
-        profileJob.value =
-          data.profile.job || "";
+  background: #dbeafe;
 
-        profileBio.value =
-          data.profile.bio || "";
+  color: var(--primary);
 
-      }
+  display: flex;
 
-      if (Array.isArray(data.links)) {
-        links = data.links;
-      }
+  align-items: center;
 
-      if (data.avatar) {
+  justify-content: center;
 
-        avatarData = data.avatar;
+  font-size: 30px;
 
-        editorAvatar.innerHTML = `
-          <img
-            src="${avatarData}"
-            style="
-              width:100%;
-              height:100%;
-              object-fit:cover;
-              border-radius:50%;
-            "
-          >
-        `;
+  font-weight: bold;
 
-        previewAvatar.innerHTML = `
-          <img
-            src="${avatarData}"
-            style="
-              width:100%;
-              height:100%;
-              object-fit:cover;
-              border-radius:50%;
-            "
-          >
-        `;
+  overflow: hidden;
 
-      }
+  flex-shrink: 0;
+}
 
-      if (data.settings) {
-        settings = {
-          ...settings,
-          ...data.settings
-        };
-      }
 
-      buttonColor.value =
-        settings.buttonColor;
+.big-avatar img,
+.profile-avatar img {
+  width: 100%;
+  height: 100%;
 
-      backgroundColor.value =
-        settings.backgroundColor;
+  object-fit: cover;
 
-      updateProfile();
-      applyColors();
-      renderLinks();
+  border-radius: 50%;
+}
 
-    } catch (error) {
 
-      console.error(
-        "Erro ao carregar os dados:",
-        error
-      );
+.avatar-editor p {
+  color: var(--text-secondary);
 
-    }
+  font-size: 13px;
 
-  }
+  margin: 5px 0 10px;
+}
 
-  /* RESTAURAR */
 
-  resetBtn.addEventListener("click", () => {
+.avatar-editor input[type="file"] {
+  max-width: 100%;
 
-    const confirmed = confirm(
-      "Tem certeza que deseja restaurar o projeto? Todos os dados salvos neste navegador serão apagados."
+  font-size: 12px;
+
+  color: var(--text-secondary);
+}
+
+
+/* =========================================================
+   BOTÕES PRINCIPAIS
+========================================================= */
+
+.primary-btn,
+.secondary-btn {
+  border: 0;
+
+  border-radius: 9px;
+
+  padding: 12px 17px;
+
+  font-weight: bold;
+
+  transition:
+    background 0.2s ease,
+    transform 0.15s ease,
+    box-shadow 0.2s ease;
+}
+
+
+.primary-btn {
+  background: var(--primary);
+
+  color: white;
+}
+
+
+.primary-btn:hover {
+  background: var(--primary-hover);
+
+  box-shadow:
+    0 4px 12px
+    color-mix(
+      in srgb,
+      var(--primary) 25%,
+      transparent
     );
+}
 
-    if (!confirmed) {
-      return;
-    }
 
-    localStorage.removeItem("linkpro_data");
+.secondary-btn {
+  background: #e2e8f0;
 
-    profileName.value = "";
-    profileJob.value = "";
-    profileBio.value = "";
+  color: #334155;
+}
 
-    links = [];
-    avatarData = "";
 
-    settings = {
-      theme: "blue",
-      buttonColor: "#2563eb",
-      backgroundColor: "#f8fafc"
-    };
+.secondary-btn:hover {
+  background: #cbd5e1;
+}
 
-    buttonColor.value =
-      settings.buttonColor;
 
-    backgroundColor.value =
-      settings.backgroundColor;
+.primary-btn:active,
+.secondary-btn:active {
+  transform: scale(0.98);
+}
 
-    editorAvatar.textContent = "?";
-    previewAvatar.textContent = "?";
 
-    updateProfile();
-    applyColors();
-    renderLinks();
+.full {
+  width: 100%;
 
-    showToast("Projeto restaurado!");
+  margin-top: 10px;
+}
 
-  });
 
-  /* GERAR PÁGINA */
+/* =========================================================
+   LINKS
+========================================================= */
 
-  generatePageBtn.addEventListener(
-    "click",
-    generatePage
-  );
+.section-heading {
+  display: flex;
 
-  function generatePage() {
+  align-items: center;
 
-    const name =
-      profileName.value.trim() || "Seu Nome";
+  justify-content: space-between;
 
-    const job =
-      profileJob.value.trim() || "Sua profissão";
+  gap: 20px;
 
-    const bio =
-      profileBio.value.trim() ||
-      "Confira meus links.";
+  margin-bottom: 20px;
+}
 
-    const buttons = links.map(link => {
 
-      return `
-        <a
-          href="${escapeAttribute(normalizeUrl(link.url))}"
-          target="_blank"
-          rel="noopener noreferrer"
-          style="
-            display:block;
-            width:100%;
-            box-sizing:border-box;
-            padding:15px 20px;
-            margin:12px 0;
-            background:${escapeAttribute(link.color || settings.buttonColor)};
-            color:#fff;
-            text-decoration:none;
-            border-radius:10px;
-            font-family:Arial,sans-serif;
-            font-weight:bold;
-            text-align:center;
-          "
-        >
-          ${escapeHtml(link.title)}
-        </a>
-      `;
+#linksContainer .card {
+  margin-bottom: 14px;
+}
 
-    }).join("");
 
-    const avatar = avatarData
-      ? `
-        <img
-          src="${avatarData}"
-          style="
-            width:100px;
-            height:100px;
-            object-fit:cover;
-            border-radius:50%;
-          "
-        >
-      `
-      : `
-        <div style="
-          width:100px;
-          height:100px;
-          border-radius:50%;
-          background:#2563eb;
-          color:white;
-          display:flex;
-          align-items:center;
-          justify-content:center;
-          font-size:36px;
-          font-weight:bold;
-        ">
-          ?
-        </div>
-      `;
+#linksContainer .card:last-child {
+  margin-bottom: 0;
+}
 
-    const page = `<!DOCTYPE html>
-<html lang="pt-BR">
 
-<head>
+.link-title,
+.link-url {
+  transition:
+    border-color 0.2s ease;
+}
 
-<meta charset="UTF-8">
 
-<meta
-  name="viewport"
-  content="width=device-width, initial-scale=1.0"
->
+/* =========================================================
+   APARÊNCIA
+========================================================= */
 
-<title>${escapeHtml(name)} — LinkPro</title>
+.theme-grid {
+  display: grid;
 
-</head>
+  grid-template-columns:
+    repeat(5, 1fr);
 
-<body style="
-  margin:0;
-  min-height:100vh;
-  background:${escapeAttribute(settings.backgroundColor)};
-  font-family:Arial,sans-serif;
-">
+  gap: 12px;
 
-<div style="
-  width:100%;
-  max-width:500px;
-  margin:auto;
-  padding:40px 20px;
-  box-sizing:border-box;
-  text-align:center;
-">
+  margin-bottom: 28px;
+}
 
-  ${avatar}
 
-  <h1 style="
-    margin:20px 0 5px;
-  ">
-    ${escapeHtml(name)}
-  </h1>
+.theme-card {
+  position: relative;
 
-  <div style="
-    color:#64748b;
-    margin-bottom:15px;
-  ">
-    ${escapeHtml(job)}
-  </div>
+  border: 2px solid var(--border);
 
-  <p style="
-    color:#475569;
-    line-height:1.6;
-  ">
-    ${escapeHtml(bio)}
-  </p>
+  background: white;
 
-  <div>
-    ${buttons}
-  </div>
+  padding: 14px 8px;
 
-  <div style="
-    margin-top:30px;
-    color:#94a3b8;
-    font-size:12px;
-  ">
-    Criado com LinkPro
-  </div>
+  border-radius: 10px;
 
-</div>
+  color: #334155;
 
-</body>
-</html>`;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.15s ease;
+}
 
-    showGeneratedCode(
-      "Página HTML gerada",
-      "Copie o código abaixo ou baixe o arquivo HTML.",
-      page,
-      true
+
+.theme-card:hover {
+  border-color: var(--primary);
+
+  transform: translateY(-1px);
+}
+
+
+.theme-card.active {
+  border-color: var(--primary);
+
+  box-shadow:
+    0 0 0 3px
+    color-mix(
+      in srgb,
+      var(--primary) 12%,
+      transparent
     );
+}
 
-  }
 
-  /* GERAR BOTÃO */
+.theme-card span {
+  display: block;
 
-  generateButtonBtn.addEventListener(
-    "click",
-    generateButton
-  );
+  width: 30px;
+  height: 30px;
 
-  function generateButton() {
+  border-radius: 50%;
 
-    if (links.length === 0) {
+  margin: 0 auto 8px;
+}
 
-      alert(
-        "Adicione pelo menos um link antes de gerar o botão."
-      );
 
-      return;
+.custom-colors {
+  display: grid;
 
-    }
+  grid-template-columns:
+    1fr
+    1fr;
 
-    const link = links[0];
+  gap: 20px;
+}
 
-    const buttonCode = `
-<a
-  href="${escapeAttribute(normalizeUrl(link.url))}"
-  target="_blank"
-  rel="noopener noreferrer"
-  style="
-    display:inline-block;
-    padding:14px 24px;
-    background:${escapeAttribute(link.color || settings.buttonColor)};
-    color:#fff;
-    text-decoration:none;
-    border-radius:10px;
-    font-family:Arial,sans-serif;
-    font-weight:bold;
-  "
->
-  ${escapeHtml(link.title)}
-</a>`.trim();
 
-    showGeneratedCode(
-      "Botão gerado",
-      "Esse código pode ser colocado em uma página HTML.",
-      buttonCode,
-      false
+.custom-colors input[type="color"] {
+  width: 100%;
+
+  height: 45px;
+
+  border: 1px solid var(--border);
+
+  border-radius: 9px;
+
+  padding: 4px;
+
+  background: white;
+
+  cursor: pointer;
+}
+
+
+/* =========================================================
+   PUBLICAR
+========================================================= */
+
+.publish-card {
+  text-align: center;
+
+  padding: 45px 25px;
+}
+
+
+.publish-icon {
+  font-size: 45px;
+
+  margin-bottom: 15px;
+}
+
+
+.publish-card h2 {
+  margin-bottom: 10px;
+}
+
+
+.publish-card > p {
+  max-width: 550px;
+
+  margin: 0 auto 25px;
+
+  color: var(--text-secondary);
+
+  line-height: 1.6;
+}
+
+
+.publish-actions {
+  display: flex;
+
+  justify-content: center;
+
+  gap: 10px;
+
+  flex-wrap: wrap;
+}
+
+
+.publish-info {
+  margin-top: 35px;
+
+  padding-top: 25px;
+
+  border-top: 1px solid var(--border);
+
+  display: grid;
+
+  grid-template-columns:
+    repeat(3, 1fr);
+
+  gap: 15px;
+}
+
+
+.publish-info div {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 5px;
+}
+
+
+.publish-info strong {
+  font-size: 14px;
+}
+
+
+.publish-info span {
+  color: var(--text-secondary);
+
+  font-size: 13px;
+}
+
+
+/* =========================================================
+   PREVIEW
+========================================================= */
+
+.preview-area {
+  background: #e2e8f0;
+
+  padding: 30px 20px;
+
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: center;
+
+  min-height: 100vh;
+}
+
+
+.preview-label {
+  color: var(--text-secondary);
+
+  font-size: 11px;
+
+  font-weight: bold;
+
+  letter-spacing: 1px;
+
+  margin-bottom: 15px;
+}
+
+
+.phone {
+  width: 300px;
+
+  height: 600px;
+
+  background: #111827;
+
+  padding: 9px;
+
+  border-radius: 32px;
+
+  box-shadow:
+    0 20px 50px
+    rgba(15, 23, 42, 0.25);
+
+  position: sticky;
+
+  top: 30px;
+}
+
+
+.phone-screen {
+  width: 100%;
+
+  height: 100%;
+
+  border-radius: 24px;
+
+  background: #f8fafc;
+
+  padding: 35px 20px 20px;
+
+  text-align: center;
+
+  overflow-y: auto;
+
+  transition:
+    background 0.25s ease;
+}
+
+
+.profile-avatar {
+  width: 80px;
+  height: 80px;
+
+  margin: 0 auto 15px;
+
+  border-radius: 50%;
+
+  background: #dbeafe;
+
+  color: var(--primary);
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  font-size: 30px;
+
+  font-weight: bold;
+
+  overflow: hidden;
+}
+
+
+.phone-screen h2 {
+  font-size: 20px;
+
+  margin-bottom: 5px;
+}
+
+
+.preview-job {
+  color: var(--text-secondary);
+
+  font-size: 13px;
+}
+
+
+.preview-bio {
+  color: #475569;
+
+  font-size: 13px;
+
+  line-height: 1.5;
+
+  margin: 15px 0 20px;
+
+  word-break: break-word;
+}
+
+
+.preview-brand {
+  color: var(--text-muted);
+
+  font-size: 11px;
+
+  margin-top: 25px;
+}
+
+
+/* =========================================================
+   MODAL
+========================================================= */
+
+.modal {
+  display: none;
+
+  position: fixed;
+
+  inset: 0;
+
+  background:
+    rgba(15, 23, 42, 0.65);
+
+  align-items: center;
+
+  justify-content: center;
+
+  padding: 20px;
+
+  z-index: 1000;
+}
+
+
+.modal.active {
+  display: flex;
+}
+
+
+.modal-box {
+  width: min(700px, 100%);
+
+  max-height: 90vh;
+
+  overflow-y: auto;
+
+  background: white;
+
+  border-radius: 15px;
+
+  padding: 25px;
+
+  position: relative;
+
+  box-shadow:
+    0 25px 70px
+    rgba(15, 23, 42, 0.25);
+}
+
+
+.modal-close {
+  position: absolute;
+
+  top: 12px;
+
+  right: 15px;
+
+  border: 0;
+
+  background: transparent;
+
+  font-size: 28px;
+
+  color: var(--text-secondary);
+
+  transition:
+    color 0.2s ease;
+}
+
+
+.modal-close:hover {
+  color: var(--text);
+}
+
+
+.modal-box h2 {
+  margin-bottom: 8px;
+}
+
+
+.modal-box p {
+  color: var(--text-secondary);
+
+  margin-bottom: 15px;
+}
+
+
+#generatedCode {
+  width: 100%;
+
+  min-height: 300px;
+
+  resize: vertical;
+
+  padding: 14px;
+
+  border: 1px solid #cbd5e1;
+
+  border-radius: 9px;
+
+  font-family: monospace;
+
+  font-size: 12px;
+
+  line-height: 1.5;
+
+  background: #0f172a;
+
+  color: #e2e8f0;
+
+  outline: none;
+}
+
+
+#generatedCode:focus {
+  border-color: var(--primary);
+
+  box-shadow:
+    0 0 0 3px
+    color-mix(
+      in srgb,
+      var(--primary) 12%,
+      transparent
     );
+}
 
+
+/* =========================================================
+   TOAST
+========================================================= */
+
+.toast {
+  position: fixed;
+
+  right: 20px;
+
+  bottom: 20px;
+
+  background: #0f172a;
+
+  color: white;
+
+  padding: 13px 18px;
+
+  border-radius: 9px;
+
+  font-size: 14px;
+
+  opacity: 0;
+
+  pointer-events: none;
+
+  transform: translateY(15px);
+
+  transition:
+    opacity 0.25s ease,
+    transform 0.25s ease;
+
+  z-index: 2000;
+
+  box-shadow:
+    0 10px 30px
+    rgba(15, 23, 42, 0.25);
+}
+
+
+.toast.show {
+  opacity: 1;
+
+  transform: translateY(0);
+}
+
+
+/* =========================================================
+   SCROLLBARS
+========================================================= */
+
+.content::-webkit-scrollbar,
+.phone-screen::-webkit-scrollbar,
+.modal-box::-webkit-scrollbar {
+  width: 7px;
+}
+
+
+.content::-webkit-scrollbar-track,
+.phone-screen::-webkit-scrollbar-track,
+.modal-box::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+
+.content::-webkit-scrollbar-thumb,
+.phone-screen::-webkit-scrollbar-thumb,
+.modal-box::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+
+  border-radius: 20px;
+}
+
+
+.content::-webkit-scrollbar-thumb:hover,
+.phone-screen::-webkit-scrollbar-thumb:hover,
+.modal-box::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+
+/* =========================================================
+   RESPONSIVO — TABLET
+========================================================= */
+
+@media (max-width: 1100px) {
+
+  .app {
+    grid-template-columns:
+      210px
+      minmax(0, 1fr);
   }
 
-  /* MODAL */
 
-  function showGeneratedCode(
-    title,
-    description,
-    code,
-    canDownload
-  ) {
-
-    modalTitle.textContent = title;
-    modalDescription.textContent = description;
-    generatedCode.value = code;
-
-    downloadBtn.style.display =
-      canDownload ? "block" : "none";
-
-    modal.classList.add("active");
-
+  .preview-area {
+    display: none;
   }
 
-  closeModal.addEventListener(
-    "click",
-    () => {
-      modal.classList.remove("active");
-    }
-  );
+}
 
-  modal.addEventListener("click", event => {
 
-    if (event.target === modal) {
-      modal.classList.remove("active");
-    }
+/* =========================================================
+   RESPONSIVO — MOBILE
+========================================================= */
 
-  });
+@media (max-width: 750px) {
 
-  /* COPIAR */
-
-  copyCodeBtn.addEventListener(
-    "click",
-    async () => {
-
-      try {
-
-        await navigator.clipboard.writeText(
-          generatedCode.value
-        );
-
-        showToast("Código copiado!");
-
-      } catch (error) {
-
-        generatedCode.select();
-
-        document.execCommand("copy");
-
-        showToast("Código copiado!");
-
-      }
-
-    }
-  );
-
-  /* BAIXAR HTML */
-
-  downloadBtn.addEventListener(
-    "click",
-    () => {
-
-      const code = generatedCode.value;
-
-      const blob = new Blob(
-        [code],
-        {
-          type: "text/html;charset=utf-8"
-        }
-      );
-
-      const url =
-        URL.createObjectURL(blob);
-
-      const a =
-        document.createElement("a");
-
-      a.href = url;
-      a.download = "linkpro.html";
-
-      document.body.appendChild(a);
-
-      a.click();
-
-      a.remove();
-
-      URL.revokeObjectURL(url);
-
-      showToast("Arquivo HTML baixado!");
-
-    }
-  );
-
-  /* TOAST */
-
-  function showToast(message) {
-
-    if (!toast) {
-      return;
-    }
-
-    toast.textContent = message;
-
-    toast.classList.add("show");
-
-    setTimeout(() => {
-
-      toast.classList.remove("show");
-
-    }, 2500);
-
+  .app {
+    display: block;
   }
 
-  /* SEGURANÇA */
 
-  function escapeHtml(value) {
+  .sidebar {
+    min-height: auto;
 
-    return String(value)
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#039;");
-
+    padding: 15px;
   }
 
-  function escapeAttribute(value) {
 
-    return escapeHtml(value);
-
+  .brand {
+    margin-bottom: 15px;
   }
 
-  function normalizeUrl(url) {
 
-    const value = String(url || "").trim();
+  nav {
+    flex-direction: row;
 
-    if (!value) {
-      return "https://";
-    }
+    overflow-x: auto;
 
-    if (
-      value.startsWith("http://") ||
-      value.startsWith("https://")
-    ) {
-      return value;
-    }
-
-    return "https://" + value;
-
+    padding-bottom: 4px;
   }
 
-  /* INICIAR */
 
-  loadData();
+  .nav-item {
+    white-space: nowrap;
 
-});
+    width: auto;
+
+    flex-shrink: 0;
+  }
+
+
+  .nav-item.active {
+    box-shadow:
+      inset 0 -3px 0 var(--primary);
+  }
+
+
+  .sidebar-bottom {
+    margin-top: 15px;
+
+    flex-direction: row;
+  }
+
+
+  .save-btn,
+  .reset-btn {
+    flex: 1;
+  }
+
+
+  .content {
+    padding: 20px;
+
+    max-height: none;
+  }
+
+
+  .topbar {
+    align-items: flex-start;
+
+    flex-direction: column;
+  }
+
+
+  .topbar h1 {
+    font-size: 24px;
+  }
+
+
+  .status {
+    font-size: 12px;
+  }
+
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+
+  .theme-grid {
+    grid-template-columns:
+      repeat(2, 1fr);
+  }
+
+
+  .custom-colors {
+    grid-template-columns: 1fr;
+  }
+
+
+  .publish-info {
+    grid-template-columns: 1fr;
+  }
+
+
+  .section-heading {
+    align-items: flex-start;
+
+    flex-direction: column;
+  }
+
+
+  .section-heading .primary-btn {
+    width: 100%;
+  }
+
+
+  .card {
+    padding: 18px;
+  }
+
+
+  .avatar-editor {
+    align-items: flex-start;
+
+    flex-direction: column;
+  }
+
+
+  .publish-card {
+    padding: 35px 18px;
+  }
+
+
+  .publish-actions {
+    flex-direction: column;
+  }
+
+
+  .publish-actions button {
+    width: 100%;
+  }
+
+
+  .modal {
+    padding: 12px;
+  }
+
+
+  .modal-box {
+    padding: 20px;
+
+    border-radius: 12px;
+  }
+
+
+  #generatedCode {
+    min-height: 240px;
+  }
+
+
+  .toast {
+    left: 15px;
+
+    right: 15px;
+
+    bottom: 15px;
+
+    text-align: center;
+  }
+
+}
+
+
+/* =========================================================
+   REDUÇÃO DE MOVIMENTO
+========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+
+    transition: none !important;
+
+    animation: none !important;
+  }
+
+}
